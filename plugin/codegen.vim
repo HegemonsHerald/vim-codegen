@@ -1,4 +1,3 @@
-
 " useful things
 inoremap <leader>p <Esc>:call TogglePasteMode()<Cr>a
 nnoremap <leader>p <Esc>:call TogglePasteMode()<Cr>
@@ -18,8 +17,3 @@ endfunc
 
 
 nnoremap stonk :tabnew<Cr>:set filetype=java<Cr>o<Cr><Cr>{<Cr><Cr>{<Cr><Cr>
-
-
-
-" only for dev:
-source ./utilities.vim
