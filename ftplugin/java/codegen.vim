@@ -1,6 +1,3 @@
-" source ./codegen_main.vim
-
-
 " think about adding
 " {@link } to the thing...
 

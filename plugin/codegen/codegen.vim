@@ -18,8 +18,3 @@ endfunc
 
 
 nnoremap stonk :tabnew<Cr>:set filetype=java<Cr>o<Cr><Cr>{<Cr><Cr>{<Cr><Cr>
-
-
-
-" only for dev:
-source ./utilities.vim
