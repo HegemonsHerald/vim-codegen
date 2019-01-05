@@ -1,1 +1,1 @@
-autocmd BufRead,BufNewFile *.java set filetype=java
+autocmd FileType,BufRead,BufNewFile *.java set filetype=java
