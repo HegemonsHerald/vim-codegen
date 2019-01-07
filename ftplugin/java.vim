@@ -87,7 +87,7 @@ func! JavaTemplateGeneral()
 	let override    = '@Override'
 	let main	= 'public static void main(String args[]) {'
 
-	let lines = [ package, '', override, class, '', main, '', '', '}', '', '}' ]
+	let lines = [ package, '', class, '', override, main, '', '', '}', '', '}' ]
 
 	call AddLines(lines)
 
@@ -109,7 +109,7 @@ func! JavaTemplateACMConsole()
 	let class	= 'public class '.filename.' extends ConsoleProgram {'
 	let main	= 'public void run() {'
 
-	let lines = [ package, '', import, '', override, class, '', main, '', '', '}', '', '}' ]
+	let lines = [ package, '', import, '', class, '', override, main, '', '', '}', '', '}' ]
 
 	call AddLines(lines)
 
@@ -132,7 +132,7 @@ func! JavaTemplateACMGraphics()
 	let class	= 'public class '.filename.' extends GraphicsProgram {'
 	let main	= 'public void run() {'
 
-	let lines = [ package, '', import1, import2, '', override, class, '', main, '', '', '}', '', '}' ]
+	let lines = [ package, '', import1, import2, '', class, '', override, main, '', '', '}', '', '}' ]
 
 	call AddLines(lines)
 
