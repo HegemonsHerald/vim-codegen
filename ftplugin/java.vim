@@ -91,7 +91,7 @@ func! JavaTemplateGeneral()
 
 	call AddLines(lines)
 
-	norm 6jo░
+	norm 6joâ
 	norm x
 
 	startinsert!
@@ -113,7 +113,7 @@ func! JavaTemplateACMConsole()
 
 	call AddLines(lines)
 
-	norm 8jo░
+	norm 8joâ
 	norm x
 
 	startinsert!
@@ -136,7 +136,7 @@ func! JavaTemplateACMGraphics()
 
 	call AddLines(lines)
 
-	norm 9jo░
+	norm 9joâ
 	norm x
 
 	startinsert!
@@ -641,10 +641,10 @@ func! s:WhileBasic()
 
 	" add update operation
 	norm! 2j
-	call AddLines(['░;', '', updt])
+	call AddLines(['â;', '', updt])
 	norm! 2x
 
-	" I have to use ░; here or Format will insert updt too far.
+	" I have to use â; here or Format will insert updt too far.
 
 	startinsert!
 
@@ -674,7 +674,7 @@ func! s:WhileAdvanced()
 		endif
 
 		" add update operation
-		call AddLines(['░;', '', updt])
+		call AddLines(['â;', '', updt])
 		norm! 2x
 
 	endif
@@ -726,7 +726,7 @@ func! s:DoWhileBasic()
 
 	" add update operation
 	norm! 2j
-	call AddLines(['░;', '', updt])
+	call AddLines(['â;', '', updt])
 	norm! 2x
 
 	" add the while signature
@@ -778,7 +778,7 @@ func! s:DoWhileAdvanced()
 		endif
 
 		" add update operation
-		call AddLines(['░;', '', updt])
+		call AddLines(['â;', '', updt])
 		norm! 2x
 
 	endif
@@ -902,15 +902,17 @@ endfunc
 " In jdoc-prompts you can use '\ ' or '\n' to denote a line-break
 let s:r_newlinePattern = '\(\\ \)\|\(\\n\)'
 
-let s:r_arrayBrackets   = '\[\=\]\='
-let s:r_word = '\<\w\+\>'
-let s:r_type = s:r_word.s:r_arrayBrackets " the array-denoting '[]' could be after the type...
-let s:r_name = s:r_word.s:r_arrayBrackets " ... or after the name
+let s:r_word = '\w\+'
+let s:r_arrayBrackets   = '\(\s*\[\]\)\='
+let s:r_genericBrackets = '\(\s*<.*>\)\='
+let s:r_type = s:r_word.s:r_genericBrackets.s:r_arrayBrackets	" the '<...>' of generics or array-denoting '[]' could be after the type...
 
+" Patterns to identify the line types with
 let s:r_classKeywordPattern = '\(interface\|class\|enum\)'
 let s:r_classExtendsPattern = '\s\+\(extends\s\+'.s:r_word.'\)\='
 let s:r_constKeywordPattern = 'static\s\+final'
 let s:r_excepKeywordPattern = '\s*throw\s\+\(new\s\+\)\='
+let s:r_methodPattern       = '.*'.s:r_type.'\s\+'.s:r_word.'\s*(.*)\s*{'
 
 
 " Creates JavaDocs for whatever thing the cursor is on, provided the cursor is
@@ -932,10 +934,15 @@ func! Jdoc()
 	" Check for existing jdocs and given such prompt for override
 	if match([getline(line('.')-1)], '\(/\*\*\)\|\(\*/\)') == 0
 		" regex checks for '/**' and '*/' anywhere in the line
-		let i = input('The preceeding line may be a JavaDoc. 1 to cancel, anything else or Enter to insert below: ')
-		if i == '1'
+		let i = input('The preceeding line may be a JavaDoc. Do you wish to insert below (Y/n)? ')
+
+		if i == 'n'
 			return
 		endif
+
+		" Let's not have the above prompt's message fill up my
+		" echo-space, eh?
+		redraw
 	endif
 
 
@@ -977,7 +984,7 @@ func! JdocExists(line_number)
 
 	" ... and check it for javadocs
 	" regex: either the beginning of a jdoc, or whitespace followed by an asterisk followed by anything, which is the middle of a comment, or match against '*/', which is a comment's end...
-	if match([line], '/\*\*') == 0 || match([line], '^\s*\*.*') == 0 || match([line], '.*\*/') == 0
+	if match([line], '/\*\*') == 0 || match([line], '^\s*\*.*') == 0 || match([line], '.*\*/') == 0 || match([line], '@Override') == 0
 		return 1
 	endif
 
@@ -996,14 +1003,10 @@ func! JdocLineType()
 
 	let line = getline(line('.'))
 
-	" Get regex helpers
-	let rType = s:r_type
-	let rName = s:r_name
-
 	" The regex patterns to check against
 	let pattClass  = s:r_classKeywordPattern
 	let pattConst  = s:r_constKeywordPattern
-	let pattMethod = '.*'.rType.'\s\+'.rName.'\s*(.*)\s*{' " match two words, parens with maybe sth in them and a {
+	let pattMethod = s:r_methodPattern
 
 	" Note, that the pattMethod also matches constructors, clever, eh?
 
@@ -1045,6 +1048,21 @@ func! JdocLineType()
 
 endfunc
 
+
+" Removes a list of keywords from the provided line
+func! JdocRemoveKeywords(line, list)
+
+	let line = a:line
+	let list = a:list
+
+	for keyword in list
+		let line = substitute(line, keyword, '', '')
+	endfor
+
+	return trim(line)
+
+endfunc
+
 " Generates Jdocs for a class, enum or interface declaration.
 "
 " The function returns a list of lines, that can be added to the file with
@@ -1054,22 +1072,36 @@ func! JdocGenClass()
 	" Get data
 
 	let line = getline('.')
-	let rWord = s:r_word
+
+	let rName = s:r_type
 	let newlinePattern = s:r_newlinePattern
+
 	let keywordPattern = s:r_classKeywordPattern
 	let extendsPattern = s:r_classExtendsPattern
 
-	let name = substitute(line, '.*'.keywordPattern.'\s\+'. '\(' . rWord . '\)' .'.*', '\2', '')
+
+	let line = JdocRemoveKeywords(line, ['public', 'private', 'protected', 'class', 'enum', 'interface'])
+	" name {
+	" name extends something {
+	" name<T> {
+	" name<T> extends something{
+
+
+	" Get the first word of the line
+	let name     = substitute(line, '^\(\w\+\).*', '\1', '')
+
+	" Get what might be in between '<>' after the first word of the line
+	let generics = substitute(line, '.*<\(.*\)>.*', '\1', '')
+	if generics == line
+		let generics = ''
+	endif
 
 
 	" Figure out Generics
 	" -------------------
 
-	" Get generic parameters
-	let genericParameters = substitute(line, '.*'.keywordPattern.'\s\+'.rWord . '\(\s*<' . '\(.*\)' . '>\)\=' .'\s*'.extendsPattern.'\s*'.'{', '\3', '')
-
 	" Get rid of any spaces among the parameters
-	let genericParameters = substitute(trim(genericParameters), ' ', '', '')
+	let genericParameters = substitute(trim(generics), ' ', '', '')
 
 	" Separate into just parameters
 	let genericParameters = split(genericParameters, ',')
@@ -1086,11 +1118,16 @@ func! JdocGenClass()
 		let substDict['%p'.i] = genericParameters[i]
 	endfor
 
-	" Get just the stuff after the class/interface keyword and before the {
-	" The weird pattern after the rWord is a match for an optional
-	" declaration of generic types
-	let promptLine  = substitute(line, '.*'.keywordPattern.'\s\+'. '\(' . rWord.'\(\s*<.*>\)\='.extendsPattern . '\)' .'\s*'.'{', '\2', '')
+
+	" A little preformatting for the promptLine
+	if generics != ''
+		let generics = '<'.generics.'>'
+	endif
+
+	" Prompt with name, type params and if there is, also the superclass
+	let promptLine  = name.generics.substitute(line, '.*\(\s\+extends\s\+\w\+\)\s*{', '\1', '')
 	let promptLine  = trim(promptLine)
+
 	let tokenString = '   %n: '.name
 
 	" Add the dynamic tokens for Generic Type Parameters
@@ -1098,6 +1135,9 @@ func! JdocGenClass()
 		let tokenString = tokenString.', %p'.i.': '.genericParameters[i]
 	endfor
 
+
+	" And now, let's actually let the magic happen
+	" ============================================
 
 	" Helping Output
 	echo promptLine
@@ -1166,7 +1206,8 @@ func! JdocGenClass()
 		let comment = ['/** '.desc[0].' */']
 	endif
 
-	" Now let's attach the genericParameters
+	" Don't forget to substitute!
+	let comment = JdocSubstituteTokens(comment, substDict)
 
 	return comment
 
@@ -1208,11 +1249,25 @@ func! JdocGenMethod()
 	" Get type and name of the method
 	" -------------------------------
 
-	" Note: the regexes are more complicated, than they really need to be. But I wanted to be
-	" as explicit with them as possible, cause the user - me - might be an idiot.
+	let line = JdocRemoveKeywords(line, ['public', 'private', 'protected', 'static'])
 
-	let type = substitute(line, '.*'.'\('.rType.'\)'.'\s\+'     .rName.     '\s*(.*)\s*{', '\1', '')	" get the second word before the parenthesis
-	let name = substitute(line, '.*'     .rType.     '\s\+'.'\('.rName.'\)'.'\s*(.*)\s*{', '\1', '')	" get the word before the parenthesis
+	" Get the first word of the line
+	let type = substitute(line, '^\(\w\+\).*', '\1', '')
+
+	" The type might have Generics, so get what might be surrounded by '<>'
+	let generics = substitute(line, '.*\(<.*>\).*', '\1', '')
+	if generics == line
+		let generics = ''
+	endif
+
+	" The type might also be an array...
+	let array = substitute(line, '.*[].*', '[]', '')
+	if array == line
+		let array = ''
+	endif
+
+	" The type of the method in total
+	let type = type.generics.array
 
 	" Whether or not to prompt for and add a return tag
 	if type == 'void' || type == 'public'
@@ -1222,10 +1277,18 @@ func! JdocGenMethod()
 	endif
 
 
+	" Get everything before the '('
+	let name = substitute(line, '\(.*\)(.*', '\1', '')
+	let name = trim(name)
+
+	" Get just the last word of that
+	let name = substitute(name, '.*\s\+\(\w\+\)$', '\1', '')
+
+
 	" Get parameters to the method
 	" ----------------------------
 
-	let params = substitute(line, '.*'.rType.'\s\+'.rName.'\s*'. '(' . '\(.*\)' . ')' .'\s*{', '\1', '')	" get what's in the parenthesis
+	let params = substitute(line, '.*(\(.*\)).*', '\1', '')				" get everything that's in between '(' and ')'
 	let params = split(params, ',')							" split into just the arguments
 	let params = map(params, 'trim(v:val)')						" get rid of whitespace
 	let params = map(params, 'substitute(v:val, "^.* ", "", "")')			" get rid of the type annotations
@@ -1261,7 +1324,7 @@ func! JdocGenMethod()
 		"   /* .* throw		beginning of multi-line comment somewhere before the 'throw'
 
 			" Get just the exception's name
-			let e = substitute(e, '^'.rExcPattern.'\(\<\w\+\>\)', '\2', '')
+			let e = substitute(e, '^'.rExcPattern.'\(\w\+\)', '\2', '')
 			" Regex: match against...
 			"   anything, til you find
 			"   'throw'
@@ -1400,12 +1463,12 @@ func! JdocGenMethod()
 	"   * @return           	what you get is honk bonk stonk
 	"
 	" How this works:
-	"                      ↓
+	"                      â
 	"   * @param honk      |	a honk
 	"   * @param honkers   |	a bonk
 	"   * @param honkbonkers	a stonk
 	"   * @return          |	what you get is honk bonk stonk
-	"                      ↑
+	"                      â
 	"
 	" I compute the number of chars up to the marked position,
 	" then I add spaces to the @-tags until they all match up
@@ -1517,27 +1580,39 @@ func! JdocGenConst()
 	let rType = s:r_type
 	let rName = s:r_name
 
+	let line = JdocRemoveKeywords(line, ['private', 'public', 'protected', 'static', 'final'])
+	let line = trim(substitute(line, '\(.*\)=.*', '\1', ''))	" get rid of the actual defintion
 
 	" Let's make a token dictionairy, shall we?
 
-	let type = substitute(line, '.*'.rStatFinal.'\s\+'.'\('.rType.'\)'.'\s\+'     .rName.     '\s\+'.'=.*', '\1', '')
-	let name = substitute(line, '.*'.rStatFinal.'\s\+'     .rType.     '\s\+'.'\('.rName.'\)'.'\s\+'.'=.*', '\1', '')
-	" Regex: match against...
-	"  .*        anything
-	"  static    'static'
-	"  \s\+      whitespace
-	"  final     'final'
-	"  \<\w\+\>  a word -> that's the type
-	"  \s\+      whitespace
-	"  \<\w\+\>  another word -> that's the name
-	"  \s\+      whitespace
-	"  =         '='
+	" Get the first word of the line
+	let type = substitute(line, '^\(\w\+\).*', '\1', '')
 
+	" The type might have Generics, so get what might be surrounded by '<>'
+	let generics = substitute(line, '.*\(<.*>\).*', '\1', '')
+	if generics == line
+		let generics = ''
+	endif
+
+	" The type might also be an array...
+	" Note: the [] might be after the name of the const, but they are part
+	" of the type, in my opinion
+	let array = substitute(line, '.*[].*', '[]', '')
+	if array == line
+		let array = ''
+	endif
+
+	let type = type.generics.array
+
+	" Get the last word of line, there might be '[]' after it
+	let name = substitute(line, '.*\s\+\(\w\+\)\(\s*[]\)\=$', '\1', '')
+
+	" Make a substitution dictionairy
 	let substDict = { '%n': name, '%t': type, '%{': '{@code' }
 
 
 	" Helper string, that's shorter than the whole 'private static final Integer yadda yadda yadda'
-	let promptLine  = substitute(line, '.*'.rStatFinal.'\s\+'.'\('.rType.'\s\+'.rName.'.*'.'\)', '\1', '')
+	let promptLine  = type.' '.name
 	let tokenString = '   %n: '.name.', %t: '.type
 
 
@@ -1633,11 +1708,11 @@ endfunc
 "
 " Computes the number of characters from
 "   here  to     here
-"     ↓           ↓
+"     â           â
 "   * @param name  	description
 "   * @param name2 	description
 "   * @param name33	description
-"     ↑           ↑
+"     â           â
 func! JdocComputeIndent(tags)
 
 	let tags = a:tags
