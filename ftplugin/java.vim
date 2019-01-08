@@ -902,9 +902,10 @@ endfunc
 " In jdoc-prompts you can use '\ ' or '\n' to denote a line-break
 let s:r_newlinePattern = '\(\\ \)\|\(\\n\)'
 
-let s:r_arrayBrackets = '\[\=\]\='
+let s:r_arrayBrackets   = '\[\=\]\='
+let s:r_genericBrackets = '<\=\<\=\w\*\>\=>\='
 let s:r_word = '\<\w\+\>'
-let s:r_type = s:r_word.s:r_arrayBrackets " the array-denoting '[]' could be after the type...
+let s:r_type = s:r_word..s:r_genericBrackets.s:r_arrayBrackets " the array-denoting '[]' could be after the type...
 let s:r_name = s:r_word.s:r_arrayBrackets " ... or after the name
 
 let s:r_classKeywordPattern = '\(interface\|class\|enum\)'
