@@ -906,6 +906,7 @@ let s:r_word = '\w\+'
 let s:r_arrayBrackets   = '\(\s*\[\]\)\='
 let s:r_genericBrackets = '\(\s*<.*>\)\='
 let s:r_type = s:r_word.s:r_genericBrackets.s:r_arrayBrackets	" the '<...>' of generics or array-denoting '[]' could be after the type...
+let s:r_name = s:r_word.s:r_arrayBrackets
 
 " Patterns to identify the line types with
 let s:r_classKeywordPattern = '\(interface\|class\|enum\)'
