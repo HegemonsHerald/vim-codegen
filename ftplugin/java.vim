@@ -84,10 +84,9 @@ func! JavaTemplateGeneral()
 	let dirname	= expand('%:p:h:t')
 	let package	= 'package '.dirname.';'
 	let class	= 'public class '.filename.' {'
-	let override    = '@Override'
 	let main	= 'public static void main(String args[]) {'
 
-	let lines = [ package, '', class, '', override, main, '', '', '}', '', '}' ]
+	let lines = [ package, '', class, '', main, '', '', '}', '', '}' ]
 
 	call AddLines(lines)
 
