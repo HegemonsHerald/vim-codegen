@@ -14,7 +14,7 @@ func! CTemplateGeneral()
 	let main	= 'int main() {'
 
 	let unicode1	= '// Make unicode work'
-	let unicode2	= 'setlocale(0, \"\");'
+	let unicode2	= 'setlocale(0, "");'
 
 	let ret		= 'return 0;'
 
