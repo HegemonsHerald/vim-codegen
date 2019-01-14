@@ -90,7 +90,7 @@ func! JavaTemplateGeneral()
 
 	call AddLines(lines)
 
-	norm 6joN
+	norm 5joN
 	norm x
 
 	startinsert!
