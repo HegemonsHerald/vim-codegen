@@ -90,7 +90,7 @@ func! JavaTemplateGeneral()
 
 	call AddLines(lines)
 
-	norm 6joâ
+	norm 6joN
 	norm x
 
 	startinsert!
@@ -112,7 +112,7 @@ func! JavaTemplateACMConsole()
 
 	call AddLines(lines)
 
-	norm 8joâ
+	norm 8joN
 	norm x
 
 	startinsert!
@@ -135,7 +135,7 @@ func! JavaTemplateACMGraphics()
 
 	call AddLines(lines)
 
-	norm 9joâ
+	norm 9joN
 	norm x
 
 	startinsert!
@@ -640,10 +640,10 @@ func! s:WhileBasic()
 
 	" add update operation
 	norm! 2j
-	call AddLines(['â;', '', updt])
+	call AddLines(['N;', '', updt])
 	norm! 2x
 
-	" I have to use â; here or Format will insert updt too far.
+	" I have to use N; here or Format will insert updt too far.
 
 	startinsert!
 
@@ -673,7 +673,7 @@ func! s:WhileAdvanced()
 		endif
 
 		" add update operation
-		call AddLines(['â;', '', updt])
+		call AddLines(['N;', '', updt])
 		norm! 2x
 
 	endif
@@ -725,7 +725,7 @@ func! s:DoWhileBasic()
 
 	" add update operation
 	norm! 2j
-	call AddLines(['â;', '', updt])
+	call AddLines(['N;', '', updt])
 	norm! 2x
 
 	" add the while signature
@@ -777,7 +777,7 @@ func! s:DoWhileAdvanced()
 		endif
 
 		" add update operation
-		call AddLines(['â;', '', updt])
+		call AddLines(['N;', '', updt])
 		norm! 2x
 
 	endif

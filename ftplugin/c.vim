@@ -22,7 +22,7 @@ func! CTemplateGeneral()
 
 	call AddLines(lines)
 
-	norm 7jo∙
+	norm 7joN
 	norm x
 
 	startinsert!
