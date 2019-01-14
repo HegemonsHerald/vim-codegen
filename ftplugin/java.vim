@@ -1091,8 +1091,8 @@ func! JdocGenClass()
 	let name     = substitute(line, '^\(\w\+\).*', '\1', '')
 
 	" Get what might be in between '<>' after the first word of the line
-	let generics = substitute(line, '.*<\(.*\)>.*', '\1', '')
-	if generics == line
+	let generics = substitute(line, '.*\(<.*>\).*', '\1', '')
+	if generics == line	" If you didn't find any generics
 		let generics = ''
 	endif
 
@@ -1117,12 +1117,6 @@ func! JdocGenClass()
 	for i in range(len(genericParameters))
 		let substDict['%p'.i] = genericParameters[i]
 	endfor
-
-
-	" A little preformatting for the promptLine
-	if generics != ''
-		let generics = '<'.generics.'>'
-	endif
 
 	" Prompt with name, type params and if there is, also the superclass
 	let promptLine  = name.generics.substitute(line, '.*\(\s\+extends\s\+\w\+\)\s*{', '\1', '')
