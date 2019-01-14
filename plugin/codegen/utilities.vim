@@ -121,7 +121,7 @@ func! AddBlock()
 	set paste
 
 	" what a block is
-	let block = ['{', '', '░', '', '}' ]
+	let block = ['{', '', 'N', '', '}' ]
 
 	" add block below current line
 	call append(line('.'), block)
