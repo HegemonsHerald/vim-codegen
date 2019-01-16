@@ -915,6 +915,15 @@ let s:r_excepKeywordPattern = '\s*throw\s\+\(new\s\+\)\='
 let s:r_methodPattern       = '.*'.s:r_type.'\s\+'.s:r_word.'\s*(.*)\s*{'
 
 
+" The pattern for methods is a bit more complicated
+let s:visibility	  = '\(public'.s:whitespace_required.'\|private'.s:whitespace_required.'\|protected'.s:whitespace_required.'\)\?'
+let s:static		  = '\(static'.s:whitespace_required.'\)\?'
+let s:method_type	  = '\(void\|short\|int\|char\|double\|float\|boolean\|long\|byte\|\u\w*\(<[^>]>\)\?\(\[\]\)\?\)'
+let s:method_name	  = '\w\+'
+let s:whitespace_required = '\s\+'
+
+let s:r_methodPattern = s:visibility.s:static.s:method_type.'\s\+'.s:method_name.'\s*'.'('.'[^()]*'.')'
+
 " Creates JavaDocs for whatever thing the cursor is on, provided the cursor is
 " on one of the following:
 "   - a method declaration
@@ -1016,31 +1025,6 @@ func! JdocLineType()
 	elseif match([line], pattConst) == 0
 		return 1
 	elseif match([line], pattMethod) == 0
-
-		" To make sure it's really a method, we must make sure, that no keywords are used.
-		" Otherwise it might also be eg. an 'else if() {'...
-
-		let keywords = [ 'else if *(', 'switch *(', 'while *(', 'new', '\sfor *(', '\sif *(' ]
-		" else if	duh.
-		" switch	duh.
-		" while		duh.
-		" new		constructors use parens, who knows...
-		" ....
-		"
-		" This list isn't necessarily exhaustive, and there are probably other edge cases I'm simply not
-		" considering, but if you keep in mind, that you're only supposed to call this function on a line,
-		" that should be documented - so not eg. an if-statement... - this should do.
-
-		" Find out if there are any keywords in the current line!
-		for keyword in keywords
-			if match([line], keyword) == 0
-				" If a keyword pattern was found, you might as well give up!
-				return -1
-			endif
-		endfor
-
-		" If you get til here, no keyword pattern was found, which means
-		" the current line is indeed a method declaration!
 		return 2
 	endif
 
