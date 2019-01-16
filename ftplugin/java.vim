@@ -917,11 +917,14 @@ let s:r_methodPattern       = '.*'.s:r_type.'\s\+'.s:r_word.'\s*(.*)\s*{'
 
 " The pattern for methods is a bit more complicated
 let s:whitespace_required = '\s\+'
-let s:visibility	  = '\(public'.s:whitespace_required.'\|private'.s:whitespace_required.'\|protected'.s:whitespace_required.'\)\?'
-let s:static		  = '\(static'.s:whitespace_required.'\)\?'
-let s:method_type	  = '\(void\|short\|int\|char\|double\|float\|boolean\|long\|byte\|\u\w*\(<[^>]>\)\?\(\[\]\)\?\)'
+
+" match any of the possible keywords or a word starting upper case, possibly
+" followed by <.*> and []
+let s:method_type	  = '\(public\|void\|short\|int\|char\|double\|float\|boolean\|long\|byte\|\u\w*\(<[^>]>\)\?\(\[\]\)\?\)'
+
 let s:method_name	  = '\w\+'
-let s:r_methodPattern = s:visibility.s:static.s:method_type.'\s\+'.s:method_name.'\s*'.'('.'[^()]*'.')'
+
+let s:r_methodPattern = s:method_type.'\s\+'.s:method_name.'\s*'.'('.'[^()]*'.')'
 
 " Creates JavaDocs for whatever thing the cursor is on, provided the cursor is
 " on one of the following:
@@ -1026,6 +1029,8 @@ func! JdocLineType()
 	elseif match([line], pattMethod) == 0
 		return 2
 	endif
+
+	echo "This is not a jdoc-able line."
 
 	return -1
 
