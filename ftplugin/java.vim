@@ -1234,19 +1234,22 @@ func! JdocGenMethod()
 	" -------------------------------
 
 
-	" Check for constructor
-	let filename	= expand('%:p:t:r')
-	if match([line], 'public\s\+'.filename) == 0
+	let line = JdocRemoveKeywords(line, ['public', 'private', 'protected', 'static'])
 
-		let name = filename
-		let type = filename
+	" Check for constructor
+	if match([line], '\w\+\s*(') == 0
+
+		" The method is a constructor if after removing 'public' from
+		"   public name() {
+		" there's only left one word and the parens:
+		"   name() {
+
+		let name = substitute(line, '\(\w\+\)\s*(.*', '\1', '')
 
 		" Constructor doesn't get return tag
 		let addReturnTag = v:false
 
 	else
-
-		let line = JdocRemoveKeywords(line, ['public', 'private', 'protected', 'static'])
 
 		" After JdocRemoveKeywords the first word in the line is the
 		" type, so no .* in the front
