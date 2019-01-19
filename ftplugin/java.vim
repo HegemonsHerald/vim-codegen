@@ -1245,6 +1245,7 @@ func! JdocGenMethod()
 		"   name() {
 
 		let name = substitute(line, '\(\w\+\)\s*(.*', '\1', '')
+		let type = name
 
 		" Constructor doesn't get return tag
 		let addReturnTag = v:false
