@@ -902,9 +902,9 @@ endfunc
 let s:r_newlinePattern = '\(\\ \)\|\(\\n\)'
 
 let s:r_word = '\w\+'
-let s:r_arrayBrackets   = '\(\s*\[\]\)\='
-let s:r_genericBrackets = '\(\s*<.*>\)\='
-let s:r_type = s:r_word.s:r_genericBrackets.s:r_arrayBrackets	" the '<...>' of generics or array-denoting '[]' could be after the type...
+let s:r_arrayBrackets   = '\(\s*\[\]\)\?'
+let s:r_genericBrackets = '\(\s*<[^>]>)\='
+let s:r_type = '\u\w*\(\s*<[^>]>\)\?\(\s*\[\]\)\?'		" the '<...>' of generics or array-denoting '[]' could be after the type...
 let s:r_name = s:r_word.s:r_arrayBrackets
 
 " Patterns to identify the line types with
@@ -912,18 +912,19 @@ let s:r_classKeywordPattern = '\(interface\|class\|enum\)'
 let s:r_classExtendsPattern = '\s\+\(extends\s\+'.s:r_word.'\)\='
 let s:r_constKeywordPattern = 'static\s\+final'
 let s:r_excepKeywordPattern = '\s*throw\s\+\(new\s\+\)\='
-let s:r_methodPattern       = '.*'.s:r_type.'\s\+'.s:r_word.'\s*(.*)\s*{'
 
 
 " The pattern for methods is a bit more complicated
 let s:whitespace_required = '\s\+'
 
-" match any of the possible keywords or a word starting upper case, possibly
-" followed by <.*> and []
-let s:method_type	  = '\(public\|void\|short\|int\|char\|double\|float\|boolean\|long\|byte\|\u\w*\(<[^>]>\)\?\(\[\]\)\?\)'
-
+" match any of the possible keywords or a word starting upper case, possibly followed by <.*> and []
+let s:method_type	  = '\(public\|void\|short\|int\|char\|double\|float\|boolean\|long\|byte\|\u\w*\(\s*<[^>]>\)\?\(\s*\[\]\)\?\)'
 let s:method_name	  = '\w\+'
+let s:method_keywords	  = '\(void\|short\|int\|char\|double\|float\|boolean\|long\|byte\)'
+let s:method_r_type	  = '\(void\|short\|int\|char\|double\|float\|boolean\|long\|byte\|\u\w*\(\s*<[^>]>\)\?\(\s*\[\]\)\?\)'
 
+" match a type, followed by a name, followed by parenthesis, which do not
+" contain parenthesis
 let s:r_methodPattern = s:method_type.'\s\+'.s:method_name.'\s*'.'('.'[^()]*'.')'
 
 " Creates JavaDocs for whatever thing the cursor is on, provided the cursor is
@@ -1215,7 +1216,8 @@ func! JdocGenMethod()
 	let newlinePattern = s:r_newlinePattern
 
 	let rWord = s:r_word
-	let rType = s:r_type
+	let rType = s:method_r_type
+	let rKeys = s:method_keywords
 	let rName = s:r_name
 	let rExcPattern = s:r_excepKeywordPattern
 
@@ -1231,46 +1233,57 @@ func! JdocGenMethod()
 	" Get type and name of the method
 	" -------------------------------
 
-	let line = JdocRemoveKeywords(line, ['public', 'private', 'protected', 'static'])
 
-	" Get the first word of the line
-	let type = substitute(line, '^\(\w\+\).*', '\1', '')
+	" Check for constructor
+	let filename	= expand('%:p:t:r')
+	if match([line], 'public\s\+'.filename) == 0
 
-	" The type might have Generics, so get what might be surrounded by '<>'
-	let generics = substitute(line, '.*\(<.*>\).*', '\1', '')
-	if generics == line
-		let generics = ''
-	endif
+		let name = filename
+		let type = filename
 
-	" The type might also be an array...
-	let array = substitute(line, '.*[].*', '[]', '')
-	if array == line
-		let array = ''
-	endif
-
-	" The type of the method in total
-	let type = type.generics.array
-
-	" Whether or not to prompt for and add a return tag
-	if type == 'void' || type == 'public'
+		" Constructor doesn't get return tag
 		let addReturnTag = v:false
+
 	else
-		let addReturnTag = v:true
+
+		let line = JdocRemoveKeywords(line, ['public', 'private', 'protected', 'static'])
+
+		" After JdocRemoveKeywords the first word in the line is the
+		" type, so no .* in the front
+
+		let type = substitute(line, '\('.rType.'\).*', '\1', '')
+
+		" The type might have Generics, so get what might be surrounded by '<>'
+		let generics = substitute(type, '[^<]*\(<[^>]*>\).*', '\1', '')
+
+		" There might not be any Generics
+		if type == generics
+			let generics = ''
+		endif
+
+		" The type might also be an array...
+		let array = substitute(type, '[^\[]*\[\].*', '\[\]', '')
+		if array == type
+			let array = ''
+		endif
+
+		" Whether or not to prompt for and add a return tag
+		if type == 'void'
+			let addReturnTag = v:false
+		else
+			let addReturnTag = v:true
+		endif
+
+		" Get the word after the type
+		let name = substitute(line, rType.'\s\+\(\w\+\).*', '\4', '')	" I know, rType contains capture groups and that results in \4 here, which ain't nice...
+		let name = trim(name)
+
 	endif
-
-
-	" Get everything before the '('
-	let name = substitute(line, '\(.*\)(.*', '\1', '')
-	let name = trim(name)
-
-	" Get just the last word of that
-	let name = substitute(name, '.*\s\+\(\w\+\)$', '\1', '')
-
 
 	" Get parameters to the method
 	" ----------------------------
 
-	let params = substitute(line, '.*(\(.*\)).*', '\1', '')				" get everything that's in between '(' and ')'
+	let params = substitute(line, '[^(]*(\([^()]*\)).*', '\1', '')			" get everything that's in between '(' and ')'
 	let params = split(params, ',')							" split into just the arguments
 	let params = map(params, 'trim(v:val)')						" get rid of whitespace
 	let params = map(params, 'substitute(v:val, "^.* ", "", "")')			" get rid of the type annotations
