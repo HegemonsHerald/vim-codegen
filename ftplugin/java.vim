@@ -1237,7 +1237,7 @@ func! JdocGenMethod()
 	let line = JdocRemoveKeywords(line, ['public', 'private', 'protected', 'static'])
 
 	" Check for constructor
-	if match([line], '\w\+\s*(') == 0
+	if match([line], '^\w\+\s*(') == 0
 
 		" The method is a constructor if after removing 'public' from
 		"   public name() {
