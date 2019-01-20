@@ -902,26 +902,27 @@ endfunc
 let s:r_newlinePattern = '\(\\ \)\|\(\\n\)'
 
 let s:r_word = '\w\+'
-let s:r_arrayBrackets   = '\(\s*\[\]\)\?'
-let s:r_genericBrackets = '\(\s*<[^>]>)\='
-let s:r_type = '\u\w*\(\s*<[^>]>\)\?\(\s*\[\]\)\?'		" the '<...>' of generics or array-denoting '[]' could be after the type...
+let s:r_arrayBrackets   = '\%(\s*\[\]\)\?'
+let s:r_genericBrackets = '\%(\s*<[^>]>)\='
+let s:r_primitives	= '\<short\>\|\<int\>\|\<char\>\|\<double\>\|\<float\>\|\<boolean\>\|\<long\>\|\<byte\>'
+let s:r_type = '\u\w*\%(\s*<[^>]>\)\?\%(\s*\[\]\)\?'		" the '<...>' of generics or array-denoting '[]' could be after the type...
 let s:r_name = s:r_word.s:r_arrayBrackets
 
 " Patterns to identify the line types with
-let s:r_classKeywordPattern = '\(interface\|class\|enum\)'
-let s:r_classExtendsPattern = '\s\+\(extends\s\+'.s:r_word.'\)\='
+let s:r_classKeywordPattern = '\%(interface\|class\|enum\)'
+let s:r_classExtendsPattern = '\s\+\%(extends\s\+'.s:r_word.'\)\='
 let s:r_constKeywordPattern = 'static\s\+final'
-let s:r_excepKeywordPattern = '\s*throw\s\+\(new\s\+\)\='
+let s:r_excepKeywordPattern = 'throw\s\+new\s\+'
 
 
 " The pattern for methods is a bit more complicated
 let s:whitespace_required = '\s\+'
 
 " match any of the possible keywords or a word starting upper case, possibly followed by <.*> and []
-let s:method_type	  = '\(public\|void\|short\|int\|char\|double\|float\|boolean\|long\|byte\|\u\w*\(\s*<[^>]>\)\?\(\s*\[\]\)\?\)'
+let s:method_type	  = '\%(\<public\|\<void\>\|\<short\>\|\<int\>\|\<char\>\|\<double\>\|\<float\>\|\<boolean\>\|\<long\>\|\<byte\>\|\u\w*\%(\s*<[^>]*>\)\?\%(\s*\[\]\)\?\)'
 let s:method_name	  = '\w\+'
-let s:method_keywords	  = '\(void\|short\|int\|char\|double\|float\|boolean\|long\|byte\)'
-let s:method_r_type	  = '\(void\|short\|int\|char\|double\|float\|boolean\|long\|byte\|\u\w*\(\s*<[^>]>\)\?\(\s*\[\]\)\?\)'
+let s:method_keywords	  = '\%(\<void\>\|\<short\>\|\<int\>\|\<char\>\|\<double\>\|\<float\>\|\<boolean\>\|\<long\>\|\<byte\>\)'
+let s:method_r_type	  = '\%(\<void\>\|\<short\>\|\<int\>\|\<char\>\|\<double\>\|\<float\>\|\<boolean\>\|\<long\>\|\<byte\>\|\u\w*\%(\s*<[^>]*>\)\?\%(\s*\[\]\)\?\)'
 
 " match a type, followed by a name, followed by parenthesis, which do not
 " contain parenthesis
@@ -1070,30 +1071,31 @@ func! JdocGenClass()
 
 
 	let line = JdocRemoveKeywords(line, ['public', 'private', 'protected', 'class', 'enum', 'interface'])
-	" name {
-	" name extends something {
-	" name<T> {
-	" name<T> extends something{
 
 
-	" Get the first word of the line
-	let name     = substitute(line, '^\(\w\+\).*', '\1', '')
+	" Get stuff out of the line
+	" -------------------------
 
-	" Get what might be in between '<>' after the first word of the line
-	let generics = substitute(line, '.*\(<.*>\).*', '\1', '')
-	if generics == line	" If you didn't find any generics
-		let generics = ''
+	" The name is the first word of the line, which matches r_type
+	let name = substitute(line, '^\(\u\w*<[^>]*>\).*', '\1', '')
+
+	" The generic parameters are what's part of the name and between '<' and '>'
+	let paramsString = substitute(name, '^.*<\([^>]*\)>.*', '\1', '')
+
+	" Now actually just get the name
+	let name = substitute(name, '^\([^<]*\)<.*', '\1', '')
+
+	" The list of generics is made of the raw paramsString
+	let genericParams = split(paramsString, ',')
+	for i in range(len(genericParams))
+		let genericParams[i] = '<'.trim(genericParams[i]).'>'
+	endfor
+
+	" The superclass is the word after 'extends'
+	let superclass = substitute(line, '^'.s:r_type.'\s\+\(extends\s\+\u\w*\).*', '\1', '')
+	if superclass == line
+		let superclass = ''
 	endif
-
-
-	" Figure out Generics
-	" -------------------
-
-	" Get rid of any spaces among the parameters
-	let genericParameters = substitute(trim(generics), ' ', '', '')
-
-	" Separate into just parameters
-	let genericParameters = split(genericParameters, ',')
 
 
 	" Let's make a token dictionairy, shall we?
@@ -1103,19 +1105,19 @@ func! JdocGenClass()
 	let substDict = { '%n': name, '%{': '{@code' }
 
 	" Dynamic Generic Type Parameter Tokens
-	for i in range(len(genericParameters))
-		let substDict['%p'.i] = genericParameters[i]
+	for i in range(len(genericParams))
+		let substDict['%p'.i] = genericParams[i]
 	endfor
 
 	" Prompt with name, type params and if there is, also the superclass
-	let promptLine  = name.generics.substitute(line, '.*\(\s\+extends\s\+\w\+\)\s*{', '\1', '')
+	let promptLine  = name.'<'.paramsString.'> '.superclass
 	let promptLine  = trim(promptLine)
 
 	let tokenString = '   %n: '.name
 
 	" Add the dynamic tokens for Generic Type Parameters
-	for i in range(len(genericParameters))
-		let tokenString = tokenString.', %p'.i.': '.genericParameters[i]
+	for i in range(len(genericParams))
+		let tokenString = tokenString.', %p'.i.': '.genericParams[i]
 	endfor
 
 
@@ -1147,12 +1149,12 @@ func! JdocGenClass()
 	let genericParamsTags = []
 	let genericParamsDesc = []
 
-	if len(genericParameters) > 0
+	if len(genericParams) > 0
 
 		" Get arguments descriptions and argument tags
-		for i in range(len(genericParameters))
-			let genericParamsTags = genericParamsTags + ['@param '.genericParameters[i]]
-			let genericParamsDesc = genericParamsDesc + [JdocInput(genericParamsTags[i].' ', 'A value for '.genericParameters[i])]
+		for i in range(len(genericParams))
+			let genericParamsTags = genericParamsTags + ['@param '.genericParams[i]]
+			let genericParamsDesc = genericParamsDesc + [JdocInput(genericParamsTags[i].' ', 'A value for '.genericParams[i])]
 		endfor
 
 	endif
@@ -1162,7 +1164,7 @@ func! JdocGenClass()
 	" ------------------------
 
 	let lenDesc = len(desc)
-	let lenGen  = len(genericParameters)
+	let lenGen  = len(genericParams)
 
 	" If there are multiple description lines or at least one generic
 	" parameter it must be a multi-line comment...
@@ -1219,9 +1221,8 @@ func! JdocGenMethod()
 	let rType = s:method_r_type
 	let rKeys = s:method_keywords
 	let rName = s:r_name
-	let rExcPattern = s:r_excepKeywordPattern
 
-	let exceptPattern = rExcPattern.rWord
+	let exceptPattern = s:r_excepKeywordPattern
 	" Regex: match against...
 	"   at least some whitespace
 	"   'throw'
@@ -1257,14 +1258,6 @@ func! JdocGenMethod()
 
 		let type = substitute(line, '\('.rType.'\).*', '\1', '')
 
-		" The type might have Generics, so get what might be surrounded by '<>'
-		let generics = substitute(type, '[^<]*\(<[^>]*>\).*', '\1', '')
-
-		" There might not be any Generics
-		if type == generics
-			let generics = ''
-		endif
-
 		" The type might also be an array...
 		let array = substitute(type, '[^\[]*\[\].*', '\[\]', '')
 		if array == type
@@ -1279,7 +1272,7 @@ func! JdocGenMethod()
 		endif
 
 		" Get the word after the type
-		let name = substitute(line, rType.'\s\+\(\w\+\).*', '\4', '')	" I know, rType contains capture groups and that results in \4 here, which ain't nice...
+		let name = substitute(line, rType.'\s\+\(\w\+\).*', '\1', '')
 		let name = trim(name)
 
 	endif
@@ -1316,14 +1309,14 @@ func! JdocGenMethod()
 		let e = getline(line('.'))
 
 		" Make sure the line isn't commented out
-		if match([e], '\(//.*throw\)\|\(^\s*\*.*throw\)\|\(/\*.*throw\)') != 0
+		if match([e], '\(//.*throw\|^\s*\*.*throw\|/\*.*throw\)') != 0
 		" Regex: match any of the following...
 		"   // .* throw		single-line comment before 'throw' somewhere
 		" ^  * .* throw		a star is the first char in the line -> by notation convention multi-line comment
 		"   /* .* throw		beginning of multi-line comment somewhere before the 'throw'
 
 			" Get just the exception's name
-			let e = substitute(e, '^'.rExcPattern.'\(\w\+\)', '\2', '')
+			let e = substitute(e, '^.*'.exceptPattern.'\('.rType.'\)(.*', '\1', '')
 			" Regex: match against...
 			"   anything, til you find
 			"   'throw'
@@ -1576,32 +1569,16 @@ func! JdocGenConst()
 
 	" Get the regex types
 	let rStatFinal = s:r_constKeywordPattern
-	let rType = s:r_type
+	let rType = '\%('.s:r_primitives.'\|'.s:r_type.'\)'
 	let rName = s:r_name
 
 	let line = JdocRemoveKeywords(line, ['private', 'public', 'protected', 'static', 'final'])
-	let line = trim(substitute(line, '\(.*\)=.*', '\1', ''))	" get rid of the actual defintion
+	let line = trim(substitute(line, '\([^=]*\)=.*', '\1', ''))	" get rid of the actual defintion
 
 	" Let's make a token dictionairy, shall we?
 
-	" Get the first word of the line
-	let type = substitute(line, '^\(\w\+\).*', '\1', '')
-
-	" The type might have Generics, so get what might be surrounded by '<>'
-	let generics = substitute(line, '.*\(<.*>\).*', '\1', '')
-	if generics == line
-		let generics = ''
-	endif
-
-	" The type might also be an array...
-	" Note: the [] might be after the name of the const, but they are part
-	" of the type, in my opinion
-	let array = substitute(line, '.*[].*', '[]', '')
-	if array == line
-		let array = ''
-	endif
-
-	let type = type.generics.array
+	" Type...
+	let type = substitute(line, '^\('.rType.'\).*', '\1', '')
 
 	" Get the last word of line, there might be '[]' after it
 	let name = substitute(line, '.*\s\+\(\w\+\)\(\s*[]\)\=$', '\1', '')
