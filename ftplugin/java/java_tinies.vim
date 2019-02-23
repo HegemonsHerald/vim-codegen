@@ -1,4 +1,3 @@
-" TODO remove these, these are for dev
 runtime codegen_lib/transformers.vim
 runtime codegen_lib/functionals.vim
 runtime codegen_lib/format.vim

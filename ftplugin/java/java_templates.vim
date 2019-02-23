@@ -1,3 +1,8 @@
+runtime codegen_lib/transformers.vim
+runtime codegen_lib/functionals.vim
+runtime codegen_lib/format.vim
+runtime codegen_lib/core.vim
+
 
 " Definitions
 

@@ -1,3 +1,8 @@
+runtime codegen_lib/transformers.vim
+runtime codegen_lib/functionals.vim
+runtime codegen_lib/format.vim
+runtime codegen_lib/core.vim
+
 
 " All of these are leader commands now, cause otherwise stuff
 " like jo interferes with words like join, and that we can't have!
