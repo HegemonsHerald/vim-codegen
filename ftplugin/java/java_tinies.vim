@@ -33,7 +33,7 @@ endfunc
 let s:block = " {\n\nX\n\n}"
 let s:blockMotions = '2j$x'
 
-let s:TypePrompt = {   -> Prompt('type: ', g:Type,            'int') }
+let s:TypePrompt = {   -> Prompt('type: ', g:Type(g:TypeDict),'int') }
 let s:NamePrompt = {   -> Prompt('name: ', g:LowerCamelCase, 'name') }
 let s:IdPrompt   = { p -> Prompt(       p, g:Id,                 '') }
 let s:ValuesPrompt = { -> s:IdPrompt('values: ') }
