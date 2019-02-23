@@ -98,7 +98,12 @@ func! Inserter(data)
 	let data   = a:data
 	let lines  = split(data[0], '\n')
 
-	call AddLines(lines)
+	" insert
+	exec 'norm! $a'.string
+
+	" format
+	let lines = len(split(string, "\n"))
+	exec 'norm! '.lines.'=kj$'
 
 	" handle moves and startinsert
 	if len(data) > 1
@@ -124,38 +129,4 @@ endfunc
 " Wraps: match(string, pattern) != -1 ? found : notFound
 func! Motion(string, pattern, found, notFound)
 	return match(a:string, a:pattern) != -1 ? a:found : a:notFound
-endfunc
-
-" selects n lines downwards and calls '='
-" Formatter(0) formats the active line;
-" Formatter(1) formats the active line and the line below it, and so on...
-func! Formatter(n)
-
-	" visually select the lines with n down moves and call '='
-	if a:n == 0
-		silent exec 'norm! V='
-	else
-		silent exec 'norm! V'.a:n.'j='
-	endif
-
-	" the execs are silent, so '=' doesn't tell you it indented lines
-
-endfunc
-
-
-func! AddLines(lines)
-
-	set paste
-
-	" add lines on the line below
-	call append(line('.'), a:lines)
-
-	" merge line below into current line
-	norm! J
-
-	" reformat the changed lines
-	call Formatter(len(a:lines)-1)
-
-	set nopaste
-
 endfunc
