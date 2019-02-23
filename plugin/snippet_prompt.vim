@@ -15,5 +15,4 @@ func! TogglePasteMode()
 
 endfunc
 
-
 nnoremap stonk :tabnew<Cr>:set filetype=java<Cr>o<Cr><Cr>{<Cr><Cr>{<Cr><Cr>

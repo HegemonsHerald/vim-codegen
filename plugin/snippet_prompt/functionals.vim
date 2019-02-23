@@ -1,5 +1,15 @@
 
-" I need to add exclamation marks to a lot of places
+" A tiny standard library of functional abstractions.
+" These are the kinds of functions you might expect to find in a functional
+" language's standard library.
+" Most of these are implemented in terms of other functions in this file, the
+" more basic ones are implemented imperatively. The reason for that is mostly,
+" that vimscript doesn't support tail call optimization (obviously), so using
+" recursion isn't really an efficient option and I tried to avoid it.
+"
+" I doubt these functions are particularly fast, but then I also doubt that
+" that really matters. This is vimscript after all.
+
 
 " takes values while the lambda returns true
 " lambda(v) where v is the current element from the list
@@ -378,4 +388,3 @@ func! Groups(lambda, list)
 
 	return l
 endfunc
-
