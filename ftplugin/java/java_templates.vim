@@ -1,5 +1,3 @@
-source core.vim
-source transformers.vim
 
 " Definitions
 

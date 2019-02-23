@@ -1,4 +1,3 @@
-source java_tinies.vim
 
 " All of these are leader commands now, cause otherwise stuff
 " like jo interferes with words like join, and that we can't have!
