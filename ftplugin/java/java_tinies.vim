@@ -68,13 +68,20 @@ func! TTransformer(string, dict)
 		\ TypeFormat(string[0:len(string)-2], a:dict).',' :
 		\ TypeFormat(string, a:dict)
 
-	" This isn't elegant, but it is necessary...
-	if Last(Chars(s)) == '<'
-		return Snippet('', s."{}>", [{-> Prompt('type (generic): ', { s -> GenericsTransformer(s) }, 'Integer') }])
-	elseif Last(Chars(s)) == ','
-		return Snippet('', s."{}", [{-> Prompt('type (generic): ', { s -> GenericsTransformer(s) }, 'Integer') }])
-	else
+	let lastChar = Last(Chars(s))
+
+	" If the end of s isn't one of the syntactical elements, there's
+	" nothing to do.
+	if lastChar != '<' && lastChar != ','
 		return s
+
+	" If it is, however...
+	else
+		" Re-prompt, but if the previously entered type ends in '<'
+		" you need to add '>' after the result of prompting this time.
+		let gt = lastChar == '<' ? '>' : ''
+
+		return Snippet('', s.'{}'.gt, [{-> Prompt('type (generic): ', { s -> GenericsTransformer(s) }, 'Integer') }])
 	endif
 endfunc
 
