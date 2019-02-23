@@ -96,7 +96,7 @@ endfunc
 " TODO explain exactly how the formatting is done
 func! Inserter(data)
 	let data   = a:data
-	let lines  = split(data[0], '\n')
+	let string = data[0]
 
 	" insert
 	exec 'norm! $a'.string
