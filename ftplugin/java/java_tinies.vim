@@ -46,19 +46,19 @@ let s:LitSnippet = { fString         -> Snippet('', fString, [s:TypePrompt, s:Na
 let s:ConSnippet = { fString, lambda -> Snippet('', fString, [s:TypePrompt, s:NamePrompt, lambda]) }
 
 func! ObjLiteral(prefix)
-	return [ s:LitSnippet(a:prefix."{} {} = {};"), '', 1 ]
+	call Inserter( [ s:LitSnippet(a:prefix."{} {} = {};"), '', 1 ] )
 endfunc
 
 func! ArrLiteral(prefix)
-	return [ s:LitSnippet(a:prefix."{}[] {} = \{ {} \};"), '2h', 1 ]
+	call Inserter( [ s:LitSnippet(a:prefix."{}[] {} = \{ {} \};"), '2h', 1 ] )
 endfunc
 
 func! ObjConstructor(prefix)
-	return [ s:ConSnippet(a:prefix."{} {} = new {0}({});", {-> s:IdPrompt('constructor arguments: ')}) , 'h', 1 ]
+	call Inserter( [ s:ConSnippet(a:prefix."{} {} = new {0}({});", {-> s:IdPrompt('constructor arguments: ')}) , 'h', 1 ] )
 endfunc
 
 func! ArrConstructor(prefix)
-	return [ s:ConSnippet(a:prefix."{}[] {} = new {0}[{}];", {-> s:IdPrompt('number of elements: ')}) , 'h', 1 ]
+	call Inserter( [ s:ConSnippet(a:prefix."{}[] {} = new {0}[{}];", {-> s:IdPrompt('number of elements: ')}) , 'h', 1 ] )
 endfunc
 
 " TODO vector, arraylist variants
@@ -73,40 +73,40 @@ endfunc
 
 func! Iff(promptStr)
 	let l = Snippet('', "if ({})".s:block, [{-> s:IdPrompt(a:promptStr)}])
-	return [ l, Motion(l, '()', s:blockMotions.'2k0f)', s:blockMotions), 1 ]
+	call Inserter( [ l, Motion(l, '()', s:blockMotions.'2k0f)', s:blockMotions), 1 ] )
 endfunc
 
 func! If()
-	return Iff('if condition: ')
+	call Inserter( Iff('if condition: ') )
 endfunc
 
 func! ElseIf()
 	let if = Iff('else if condition: ')
-	return [ ' else '.if[0] ] + Tail(if)
+	call Inserter( [ ' else '.if[0] ] + Tail(if) )
 endfunc
 
 func! Else()
-	return [ " else ".s:block, s:blockMotions , 1 ]
+	call Inserter( [ " else ".s:block, s:blockMotions , 1 ] )
 endfunc
 
 " Oneliners
 
 func! Ifo(promptStr)
 	let l = Snippet('', "if ({}) ;", [{-> s:IdPrompt(a:promptStr)}])
-	return [ l, Motion(l, '()', '2h', ''), '', 1 ]
+	call Inserter( [ l, Motion(l, '()', '2h', ''), '', 1 ] )
 endfunc
 
 func! IfOne()
-	return Ifo('if condition (oneline): ')
+	call Inserter( Ifo('if condition (oneline): ') )
 endfunc
 
 func! ElseIfOne()
 	let if = Ifo('else if condition (oneline): ')
-	return [ 'else '.if[0] ] + Tail(if)
+	call Inserter( [ 'else '.if[0] ] + Tail(if) )
 endfunc
 
 func! ElseOne()
-	return [ "else ;", '', '', 1 ]
+	call Inserter( [ "else ;", '', '', 1 ] )
 endfunc
 
 
@@ -162,7 +162,7 @@ func! Switch()
 	" reset output height
 	let &cmdheight = old_cmdheight
 
-	return [ s ]
+	call Inserter( [ s ] )
 endfunc
 
 " Helper to print string in a call chain, so the user gets output the case he
