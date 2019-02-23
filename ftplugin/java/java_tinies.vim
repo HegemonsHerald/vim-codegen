@@ -72,7 +72,7 @@ endfunc
 
 func! Iff(promptStr)
 	let l = Snippet('', "if ({})".s:block, [{-> s:IdPrompt(a:promptStr)}])
-	return [ l, Motion(l, '()', s:blockMotions.'2k0f)', s:blockMotions), 1 ]
+	return [ l, Motion(l, '()', s:blockMotions.'2k0f)', s:blockMotions), 2 ]
 endfunc
 
 func! If()
@@ -85,7 +85,7 @@ func! ElseIf()
 endfunc
 
 func! Else()
-	call Inserter( [ " else ".s:block, s:blockMotions , 1 ] )
+	call Inserter( [ " else ".s:block, s:blockMotions , 2 ] )
 endfunc
 
 " Oneliners
