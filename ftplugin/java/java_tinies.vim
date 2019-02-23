@@ -1,8 +1,8 @@
 " TODO remove these, these are for dev
-" source ../../plugin/codegen/transformers.vim
-" source ../../plugin/codegen/functionals.vim
-" source ../../plugin/codegen/format.vim
-" source ../../plugin/codegen/core.vim
+source ../../plugin/codegen_resources/transformers.vim
+source ../../plugin/codegen_resources/functionals.vim
+source ../../plugin/codegen_resources/format.vim
+source ../../plugin/codegen_resources/core.vim
 
 
 " 0 => ''
@@ -33,7 +33,7 @@ endfunc
 let s:block = " {\n\nX\n\n}"
 let s:blockMotions = '2j$x'
 
-let s:TypePrompt = {   -> Prompt('type: ', g:Type(g:TypeDict),'int') }
+let s:TypePrompt = {   -> Prompt('type: ', {-> 'int'},'int') }
 let s:NamePrompt = {   -> Prompt('name: ', g:LowerCamelCase, 'name') }
 let s:IdPrompt   = { p -> Prompt(       p, g:Id,                 '') }
 let s:ValuesPrompt = { -> s:IdPrompt('values: ') }
@@ -46,6 +46,7 @@ let s:LitSnippet = { fString         -> Snippet('', fString, [s:TypePrompt, s:Na
 let s:ConSnippet = { fString, lambda -> Snippet('', fString, [s:TypePrompt, s:NamePrompt, lambda]) }
 
 func! ObjLiteral(prefix)
+	return [ s:LitSnippet(a:prefix."{} {} = {};"), '', 1 ]
 	call Inserter( [ s:LitSnippet(a:prefix."{} {} = {};"), '', 1 ] )
 endfunc
 
