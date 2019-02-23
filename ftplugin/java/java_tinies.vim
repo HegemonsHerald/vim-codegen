@@ -1,8 +1,8 @@
 " TODO remove these, these are for dev
-runtime codegen/lib/transformers.vim
-runtime codegen/lib/functionals.vim
-runtime codegen/lib/format.vim
-runtime codegen/lib/core.vim
+runtime codegen_lib/transformers.vim
+runtime codegen_lib/functionals.vim
+runtime codegen_lib/format.vim
+runtime codegen_lib/core.vim
 
 
 " 0 => ''
