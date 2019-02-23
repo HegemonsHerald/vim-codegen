@@ -45,7 +45,6 @@ let s:LitSnippet = { fString         -> Snippet('', fString, [s:TypePrompt, s:Na
 let s:ConSnippet = { fString, lambda -> Snippet('', fString, [s:TypePrompt, s:NamePrompt, lambda]) }
 
 func! ObjLiteral(prefix)
-	return [ s:LitSnippet(a:prefix."{} {} = {};"), '', 1 ]
 	call Inserter( [ s:LitSnippet(a:prefix."{} {} = {};"), '', 1 ] )
 endfunc
 
