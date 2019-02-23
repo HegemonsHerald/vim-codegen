@@ -72,7 +72,7 @@ endfunc
 
 func! Iff(promptStr)
 	let l = Snippet('', "if ({})".s:block, [{-> s:IdPrompt(a:promptStr)}])
-	call Inserter( [ l, Motion(l, '()', s:blockMotions.'2k0f)', s:blockMotions), 1 ] )
+	[ l, Motion(l, '()', s:blockMotions.'2k0f)', s:blockMotions), 1 ]
 endfunc
 
 func! If()
@@ -92,7 +92,7 @@ endfunc
 
 func! Ifo(promptStr)
 	let l = Snippet('', "if ({}) ;", [{-> s:IdPrompt(a:promptStr)}])
-	call Inserter( [ l, Motion(l, '()', '2h', ''), '', 1 ] )
+	return [ l, Motion(l, '()', '2h', ''), '', 1 ]
 endfunc
 
 func! IfOne()
