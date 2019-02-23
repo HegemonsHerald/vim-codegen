@@ -1,3 +1,10 @@
+" TODO remove these, these are for dev
+source ../../plugin/codegen/transformers.vim
+source ../../plugin/codegen/functionals.vim
+source ../../plugin/codegen/format.vim
+source ../../plugin/codegen/core.vim
+
+
 " 0 => ''
 " 1 => 'private '
 " 2 => 'public '
@@ -12,6 +19,14 @@ func! Visibility(visibility)
 endfunc
 
 
+" IMPORTANT NOTICE:
+" All functions that take 'prefix' as argument will prefix their output with
+" that argument. This is used for Visibility keywords and Constant Declarations:
+"
+" 	:call Function(Visibility(NUMBER))	=> adds a visibility modifier
+" 	:call Function('static final ')		=> adds a 'static final '
+
+
 
 " REUSABLE PROMPTS AND VARIABLES
 
@@ -19,8 +34,8 @@ let s:block = " {\n\nX\n\n}"
 let s:blockMotions = '2j$x'
 
 let s:TypePrompt = {   -> Prompt('type: ', Type,            'int') }
-let s:NamePrompt = {   -> Prompt('name: ', LowerCamelCase, 'name') }
-let s:IdPrompt   = { p -> Prompt(       p, Id,                 '') }
+let s:NamePrompt = {   -> Prompt('name: ', b:LowerCamelCase, 'name') }
+let s:IdPrompt   = { p -> Prompt(       p, b:Id,                 '') }
 let s:ValuesPrompt = { -> s:IdPrompt('values: ') }
 
 
@@ -30,24 +45,20 @@ let s:ValuesPrompt = { -> s:IdPrompt('values: ') }
 let s:LitSnippet = { fString         -> Snippet('', fString, [s:TypePrompt, s:NamePrompt, s:ValuesPrompt]) }
 let s:ConSnippet = { fString, lambda -> Snippet('', fString, [s:TypePrompt, s:NamePrompt, lambda]) }
 
-func! ObjLiteral(visibility)
-	let visib = Visibility(a:visibility)
-	return [ s:LitSnippet(visib."{} {} = {};"), '', 1 ]
+func! ObjLiteral(prefix)
+	return [ s:LitSnippet(a:prefix."{} {} = {};"), '', 1 ]
 endfunc
 
-func! ArrLiteral(visibility)
-	let visib = Visibility(a:visibility)
-	return [ s:LitSnippet(visib."{}[] {} = \{ {} \};"), '2h', 1 ]
+func! ArrLiteral(prefix)
+	return [ s:LitSnippet(a:prefix."{}[] {} = \{ {} \};"), '2h', 1 ]
 endfunc
 
-func! ObjConstructor(visibility)
-	let visib = Visibility(a:visibility)
-	return [ s:ConSnippet(visib."{} {} = new {0}({});", {-> s:IdPrompt('constructor arguments: ')}) , 'h', 1 ]
+func! ObjConstructor(prefix)
+	return [ s:ConSnippet(a:prefix."{} {} = new {0}({});", {-> s:IdPrompt('constructor arguments: ')}) , 'h', 1 ]
 endfunc
 
-func! ArrConstructor(visibility)
-	let visib = Visibility(a:visibility)
-	return [ s:ConSnippet(visib."{}[] {} = new {0}[{}];", {-> s:IdPrompt('number of elements: ')}) , 'h', 1 ]
+func! ArrConstructor(prefix)
+	return [ s:ConSnippet(a:prefix."{}[] {} = new {0}[{}];", {-> s:IdPrompt('number of elements: ')}) , 'h', 1 ]
 endfunc
 
 " TODO vector, arraylist variants
@@ -60,22 +71,42 @@ endfunc
 
 " Basic Control Flow
 
+func! Iff(promptStr)
+	let l = Snippet('', "if ({})".s:block, [{-> s:IdPrompt(a:promptStr)}])
+	return [ l, Motion(l, '()', s:blockMotions.'2k0f)', s:blockMotions), 1 ]
+endfunc
+
 func! If()
-	return [ Snippet('', "if ({})".s:block, [{-> s:IdPrompt('if condition: ')}]), s:blockMotions, 1 ]
+	return Iff('if condition: ')
 endfunc
 
 func! ElseIf()
-	let if = If()
-	return [ ' else '.if[0], s:blockMotions , 1 ]
+	let if = Iff('else if condition: ')
+	return [ ' else '.if[0] ] + Tail(if)
 endfunc
 
 func! Else()
 	return [ " else ".s:block, s:blockMotions , 1 ]
 endfunc
 
-func! IfOne()
-	let l = Snippet('', "if ({}) ;", [{-> s:IdPrompt('if condition: ')}])
+" Oneliners
+
+func! Ifo(promptStr)
+	let l = Snippet('', "if ({}) ;", [{-> s:IdPrompt(a:promptStr)}])
 	return [ l, Motion(l, '()', '2h', ''), '', 1 ]
+endfunc
+
+func! IfOne()
+	return Ifo('if condition (oneline): ')
+endfunc
+
+func! ElseIfOne()
+	let if = Ifo('else if condition (oneline): ')
+	return [ 'else '.if[0] ] + Tail(if)
+endfunc
+
+func! ElseOne()
+	return [ "else ;", '', '', 1 ]
 endfunc
 
 
@@ -104,7 +135,7 @@ endfunc
 " You may use "\n" for linebreaks in the code block, though it seems advisable
 " to use this snippet more to quickly generate the infrastructure and to add
 " the code afterwards.
-func! JavaSwitch()
+func! Switch()
 	" Transformers
 	let s:CaseTransformer = { s -> Unlines( Map( {l->Unwords(l)}, GroupNFull( 3, Map( { w -> 'case '.w.':' }, split(s) ) ) ) ) . "\n" }
 	let s:CodeTransformer = { s -> s:CodeTrans( substitute(s, '\\n', '\n', 'g') ) }
@@ -148,5 +179,8 @@ endfunc
 
 " Methods
 " TODO methods
+
+func! MakeMethod(prefix)
+endfunc
 
 " vim: foldmethod=indent
