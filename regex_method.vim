@@ -9,3 +9,10 @@ let METHOD = VSBL.STTC.TYPE.'\s\+'.NAME.'\s*'.'('.'[^()]*'.')'
 " The only thing with Type name parenthesis is the method declaration
 
 " This lets you find ALL possible methods in the entire class file
+
+
+" TODO:
+
+- add a bit more commenting to the method regex
+- use better regex for destructuring the method
+- make a jdocAll function and add a sensible binding
