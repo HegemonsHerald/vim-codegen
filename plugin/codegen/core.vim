@@ -1,5 +1,3 @@
-source format.vim
-source functionals.vim
 
 " Prompts without a second argument to input()
 func! Prompt(prompt, transformer, default)
