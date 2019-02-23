@@ -32,10 +32,65 @@ endfunc
 let s:block = " {\n\nX\n\n}"
 let s:blockMotions = '2j$x'
 
-let s:TypePrompt = {   -> Prompt('type: ', {-> 'int'},'int') }
+" for the TypePrompt, see below
+let s:TypePrompt = {   -> Prompt('type: ', { s -> TypeTransformer(s) }, 'int') }
 let s:NamePrompt = {   -> Prompt('name: ', g:LowerCamelCase, 'name') }
 let s:IdPrompt   = { p -> Prompt(       p, g:Id,                 '') }
 let s:ValuesPrompt = { -> s:IdPrompt('values: ') }
+
+
+
+" THE TYPE PROMPT IMPLEMENTATION
+
+let s:TypeDict    = { 'i':'int',     'S':'short', 'c':'char', 'd':'double', 'f':'float', 'b':'boolean', 's':'String', 'al':'ArrayList<', 'v':'Vector<' }
+let s:GenericDict = { 'i':'Integer', 'S':'Short', 'c':'Char', 'd':'Double', 'f':'Float', 'b':'Boolean', 's':'String', 'al':'ArrayList<', 'v':'Vector<' }
+
+func! TypeTransformer(string)
+	return TTransformer(a:string, s:TypeDict)
+endfunc
+
+func! GenericsTransformer(string)
+	return TTransformer(a:string, s:GenericDict)
+endfunc
+
+" Prompts recursively with GenericsTransformer() if the input ends in ',' or
+" in '<' or, if the input is an abbreviation, the substitution of the
+" abbreviation does.
+func! TTransformer(string, dict)
+	let string = trim(a:string)
+
+	" If the last char of the input is a comma, then it's a part of
+	" syntax. That has to be removed or it'll confuse the lookup function.
+	" Note, that the '<' don't have to be removed, cause the point of the
+	" abbreviation tokens is, that the abbrevs don't have the '<' and non
+	" of the primitives require them.
+	let s = Last(Chars(string)) == ',' ?
+		\ TypeFormat(string[0:len(string)-2], a:dict).',' :
+		\ TypeFormat(string, a:dict)
+
+	" This isn't elegant, but it is necessary...
+	if Last(Chars(s)) == '<'
+		return Snippet('', s."{}>", [{-> Prompt('type (generic): ', { s -> GenericsTransformer(s) }, 'Integer') }])
+	elseif Last(Chars(s)) == ','
+		return Snippet('', s."{}", [{-> Prompt('type (generic): ', { s -> GenericsTransformer(s) }, 'Integer') }])
+	else
+		return s
+	endif
+endfunc
+
+func! TypeFormat(token, dict)
+	let l = TypeLookup(a:token, a:dict)
+	return l[0] ? l[1] : s:FixGeneric(g:CamelCase(l[1]))
+endfunc
+
+" g:CamelCase takes care of whitespace removal
+let s:FixGeneric = { s -> match(s, '<>\=$') != -1 ? substitute(s, '>$', '', '') : s }
+
+" returns [1,value] if the lookup was successfull,
+" and     [0, key ] if the lookup failed
+func! TypeLookup(token, dict)
+	return has_key(a:dict, a:token) ? [ 1, a:dict[a:token] ] : [ 0, a:token ]
+endfunc
 
 
 
