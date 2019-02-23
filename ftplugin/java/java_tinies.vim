@@ -1,8 +1,8 @@
 " TODO remove these, these are for dev
-source ../../plugin/codegen_resources/transformers.vim
-source ../../plugin/codegen_resources/functionals.vim
-source ../../plugin/codegen_resources/format.vim
-source ../../plugin/codegen_resources/core.vim
+runtime codegen/lib/transformers.vim
+runtime codegen/lib/functionals.vim
+runtime codegen/lib/format.vim
+runtime codegen/lib/core.vim
 
 
 " 0 => ''
