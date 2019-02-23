@@ -72,7 +72,7 @@ endfunc
 
 func! Iff(promptStr)
 	let l = Snippet('', "if ({})".s:block, [{-> s:IdPrompt(a:promptStr)}])
-	[ l, Motion(l, '()', s:blockMotions.'2k0f)', s:blockMotions), 1 ]
+	return [ l, Motion(l, '()', s:blockMotions.'2k0f)', s:blockMotions), 1 ]
 endfunc
 
 func! If()
