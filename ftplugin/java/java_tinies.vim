@@ -81,18 +81,18 @@ endfunc
 
 func! ElseIf()
 	let if = Iff('else if condition: ')
-	call Inserter( [ ' else '.if[0] ] + Tail(if) )
+	call Inserter( [ 'else'.if[0] ] + Tail(if) )
 endfunc
 
 func! Else()
-	call Inserter( [ " else ".s:block, s:blockMotions , 2 ] )
+	call Inserter( [ 'else'.s:block, s:blockMotions , 2 ] )
 endfunc
 
 " Oneliners
 
 func! Ifo(promptStr)
 	let l = Snippet('', "if ({}) ;", [{-> s:IdPrompt(a:promptStr)}])
-	return [ l, Motion(l, '()', '2h', ''), '', 1 ]
+	return [ l, Motion(l, '()', '2h', ''), 1 ]
 endfunc
 
 func! IfOne()
@@ -105,7 +105,7 @@ func! ElseIfOne()
 endfunc
 
 func! ElseOne()
-	call Inserter( [ "else ;", '', '', 1 ] )
+	call Inserter( [ "else ;", '', 1 ] )
 endfunc
 
 

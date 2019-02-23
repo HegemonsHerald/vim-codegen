@@ -99,7 +99,7 @@ func! Inserter(data)
 	let string = data[0]
 
 	" insert
-	exec 'norm! $a'.string
+	exec 'norm! A'.string
 
 	" format
 	let lines = len(split(string, "\n"))
