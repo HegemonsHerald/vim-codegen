@@ -8,7 +8,7 @@
 " 	endif
 " endfunc
 
-let b:MaybeLookup = { k, d -> has_key(k, d) == 1 ? d[k] : k }
+let g:MaybeLookup = { k, d -> has_key(k, d) == 1 ? d[k] : k }
 
 " Type transformer TODO make this one nice and advanced and move it out to the
 " java specific file
@@ -27,12 +27,12 @@ let Type = { string -> MaybeLookup(string, TypeDict)}
 " use them
 
 " Name transformers
-let b:SnakeCase      = { string -> join(    split(trim(string)                                        ), '_') }
-let b:LowerSnakeCase = { string -> join(map(split(trim(string)), {i,v -> tolower(v)}                  ), '_') }
-let b:UpperSnakeCase = { string -> join(map(split(trim(string)), {i,v -> toupper(v[0]).tolower(v[1:])}), '_') }
-let b:UpperCase      = { string -> join(map(split(trim(string)), {i,v -> toupper(v)}                  ), '_') }
-let b:CamelCase      = { string -> join(map(split(trim(string)), {i,v -> toupper(v[0]).v[1:]}         ),  '') }
-let b:LowerCamelCase = { string -> trim(string)[0].CamelCase(trim(string))[1:] }
+let g:SnakeCase      = { string -> join(    split(trim(string)                                        ), '_') }
+let g:LowerSnakeCase = { string -> join(map(split(trim(string)), {i,v -> tolower(v)}                  ), '_') }
+let g:UpperSnakeCase = { string -> join(map(split(trim(string)), {i,v -> toupper(v[0]).tolower(v[1:])}), '_') }
+let g:UpperCase      = { string -> join(map(split(trim(string)), {i,v -> toupper(v)}                  ), '_') }
+let g:CamelCase      = { string -> join(map(split(trim(string)), {i,v -> toupper(v[0]).v[1:]}         ),  '') }
+let g:LowerCamelCase = { string -> trim(string)[0].CamelCase(trim(string))[1:] }
 
 " Do nothing transformer
-let b:Id = {n -> n}
+let g:Id = {n -> n}

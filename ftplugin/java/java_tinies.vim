@@ -34,8 +34,8 @@ let s:block = " {\n\nX\n\n}"
 let s:blockMotions = '2j$x'
 
 let s:TypePrompt = {   -> Prompt('type: ', Type,            'int') }
-let s:NamePrompt = {   -> Prompt('name: ', b:LowerCamelCase, 'name') }
-let s:IdPrompt   = { p -> Prompt(       p, b:Id,                 '') }
+let s:NamePrompt = {   -> Prompt('name: ', g:LowerCamelCase, 'name') }
+let s:IdPrompt   = { p -> Prompt(       p, g:Id,                 '') }
 let s:ValuesPrompt = { -> s:IdPrompt('values: ') }
 
 
@@ -156,7 +156,7 @@ func! Switch()
 
 	" The Switch Statement
 	let s = Snippet('Switch', "switch ({}) {\n{}}", [
-				\ { -> Prompt('Enter Switch Condition: ', b:Id, 'true') },
+				\ { -> Prompt('Enter Switch Condition: ', g:Id, 'true') },
 				\ Cases ])
 
 	" reset output height

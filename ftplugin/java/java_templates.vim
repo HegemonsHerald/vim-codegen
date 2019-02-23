@@ -20,8 +20,8 @@ func! JavaClassDefault()
 	let &cmdheight = 2
 
 	let l = Snippet( 'Default Java Class', s:templateStr, [
-				\ {-> OptSnippet('package', 'Y', '{}', [{-> Prompt2('package > ', b:Id, expand('%:p:h:t'))}])},
-				\ {-> Prompt2('class > ',   b:Id, expand('%:p:t:r'))},
+				\ {-> OptSnippet('package', 'Y', '{}', [{-> Prompt2('package > ', g:Id, expand('%:p:h:t'))}])},
+				\ {-> Prompt2('class > ',   g:Id, expand('%:p:t:r'))},
 				\ {-> Prompt('... extends ',    s:Extend, '')},
 				\ {-> Prompt('... implements ', s:Implem, '')},
 				\ {-> OptSnippet('main method', 'N', s:mainStr, [s:Empty], 'x')}] )
