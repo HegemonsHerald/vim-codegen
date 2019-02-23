@@ -12,8 +12,8 @@ let g:MaybeLookup = { k, d -> has_key(k, d) == 1 ? d[k] : k }
 
 " Type transformer TODO make this one nice and advanced and move it out to the
 " java specific file
-let TypeDict = {'i': 'int', 'd': 'double'}
-let Type = { string -> MaybeLookup(string, TypeDict)}
+let g:TypeDict = {'i': 'int', 'd': 'double'}
+let g:Type = { string -> g:MaybeLookup(string, g:TypeDict)}
 
 
 " All Name Transformers take a string of whitespace separated tokens and to
@@ -32,7 +32,7 @@ let g:LowerSnakeCase = { string -> join(map(split(trim(string)), {i,v -> tolower
 let g:UpperSnakeCase = { string -> join(map(split(trim(string)), {i,v -> toupper(v[0]).tolower(v[1:])}), '_') }
 let g:UpperCase      = { string -> join(map(split(trim(string)), {i,v -> toupper(v)}                  ), '_') }
 let g:CamelCase      = { string -> join(map(split(trim(string)), {i,v -> toupper(v[0]).v[1:]}         ),  '') }
-let g:LowerCamelCase = { string -> trim(string)[0].CamelCase(trim(string))[1:] }
+let g:LowerCamelCase = { string -> trim(string)[0].g:CamelCase(trim(string))[1:] }
 
 " Do nothing transformer
 let g:Id = {n -> n}

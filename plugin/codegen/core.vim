@@ -108,7 +108,7 @@ func! Inserter(data)
 	exec 'norm! '.lines.'=kj$'
 
 	" handle moves and startinsert
-	if len(data) > 1 
+	if len(data) > 1
 
 		" execute moves
 		if data[1] != ''
