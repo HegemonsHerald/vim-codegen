@@ -67,7 +67,7 @@ func! TTransformer(string, dict, previousString)
 	let lastChar = Last(Chars(s))
 
 	if lastChar == '<'
-		let genericParams = OptSnippetIterate('Type Argument', 'N', '{}', [{-> Prompt('type (generic) - '.a:previousString.s.' : ', { m -> GenericsTransformer(m, a:previousString.s) }, 'Integer') }], { s -> FlattenStr(Map({ s -> s.',' }, Init(s)) + [Last(s)]) }, 1)
+		let genericParams = SnippetExtendedIterate('Type Argument', 'N', '{}', [{-> Prompt('type (generic) - '.a:previousString.s.' : ', { m -> GenericsTransformer(m, a:previousString.s) }, 'Integer') }], { s -> FlattenStr(Map({ s -> s.',' }, Init(s)) + [Last(s)]) }, 1)
 		echo s.genericParams.'>'
 		return s . genericParams . '>'
 	else

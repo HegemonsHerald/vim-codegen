@@ -108,24 +108,41 @@ endfunc
 " 	optionally any amount more.
 "
 " overrideReturn	See OptSnippet
-func! OptSnippetIterate(name, default, format, prompts, metaTransformer, ...)
+"
+" In Haskell you'd use an infinite list and then takeWhile or take from it...
+
+
+
+func! SnippetExtendedIterate(name, default, format, prompts, metaTransformer, n, ...)
 
 	" Figure out the defaults of the optional arguments
-	let n        = a:0 > 0 ? a:1+1 : 0
-	echo n
-	" let override = a:0 > 1 ? a:2   : ''
-	let override = ''
+	let override = a:0 > 1 ? a:1 : ''
 
-	" The lambdas for the Iterate()s
-	let S = {->    Snippet(    '',            a:format, a:prompts) }
-	let O = {-> OptSnippet(a:name, a:default, a:format, a:prompts) }
-
-	let head = Iterate(n, S, '')
-	let tail = IterateWhile({ s -> s != override }, O, O())
+	let head = a:n <= 0 ? [] : SnippetIterate(a:name, a:format, a:prompts, g:Id, a:n, override)
+	let tail = OptSnippetIterate(a:name, a:default, a:format, a:prompts, g:Id, override)
 
 	" Do all the magic
-	" Tail() because the first element of head will invariably be ''
-	return a:metaTransformer(Tail(head + tail))
+	return a:metaTransformer( head + tail )
+
+endfunc
+
+func! OptSnippetIterate(name, default, format, prompts, metaTransformer, ...)
+
+	" Handle optional argument
+	let override = a:0 > 1 ? a:1 : ''
+
+	let S = {-> OptSnippet(a:name, a:default, a:format, a:prompts) }
+	return a:metaTransformer( IterateWhile({ s -> s != override }, S, S()) )
+
+endfunc
+
+func! SnippetIterate(name, format, prompts, metaTransformer, n, ...)
+
+	" Handle optional argument
+	let override = a:0 > 1 ? a:1 : ''
+
+	let S = {-> Snippet('', a:format, a:prompts) }
+	return a:metaTransformer( Iterate(a:n, S, S()) )
 
 endfunc
 
