@@ -134,7 +134,11 @@ func! Filter(lambda, list)
 endfunc
 
 func! Last(list)
-	return a:list[len(a:list)-1]
+	if len(a:list) <= 0
+		return []
+	else
+		return a:list[len(a:list)-1]
+	endif
 endfunc
 
 " produces a list of length n, so start is the result of iteration 1 and func
@@ -146,6 +150,11 @@ endfunc
 "       n = current iteration count, the start element has count 0
 "       l = the current state of the list (before computing the next element)
 func! Iterate(n, func, start)
+
+	if a:n < 1
+		return []
+	endif
+
 	let list = [a:start]
 
 	" minus 1 because the first element (start) has already been added
@@ -170,6 +179,11 @@ endfunc
 "       n = current iteration count, the start element has count 0
 "       l = the current state of the list (before computing the next element)
 func! IterateList(n, func, startList)
+
+	if a:n < 1
+		return []
+	endif
+
 	let list = a:startList
 
 	" n is the iteration count, not an index into the list (as not to

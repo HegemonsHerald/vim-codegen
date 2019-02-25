@@ -66,7 +66,18 @@ func! OptSnippet(name, default, format, prompts, ...)
 	let p = a:default == 'Y' ? 'Y/n' : 'y/N'
 	let i = trim(input('Insert '.a:name.'? '.p.' > '))
 
-	if (i == '' && a:default == 'Y') || (i[0] != 'n' && i[0] != 'N')
+	" The following if statement is pain, I know.
+
+	" If either (the default is Y and (the input is empty or the input doesn't start with n or N)) or (the input starts with y or Y), then do the 'yes' action
+	"
+	" In other words:
+	"  (default == Y && i == '') || (default == Y && (i[0] != 'n' && i[0] != 'N')) || i[0] == 'y' || i[0] == 'Y'
+	"  |                            |                                                 |
+	"  |                            |                                                 |the input starts with y or Y
+	"  |                            |default is s and the input doesn't start with n or N
+	"  |default is yes and nothing was entered
+	"
+	if (a:default == 'Y' && (i == '' || (i[0] != 'n' && i[0] != 'N'))) || (i[0] == 'y' || i[0] == 'Y')
 		return Snippet('', a:format, a:prompts)
 	else
 		if a:0 > 0
@@ -75,6 +86,47 @@ func! OptSnippet(name, default, format, prompts, ...)
 			return ''
 		endif
 	endif
+
+endfunc
+
+
+" This one has one special Argument: metaTransformer.
+" Usually a transformer operates on the result of prompting the user with
+" Prompt(), well this transformer operates on the results of building multiple
+" Snippets. Its purpose is to turn the list of Snippets IterateWhile() into a
+" single string (because it's convention that all the Prompts and Snippets
+" evaluate to strings), so the simplest three metaTransformers are
+" FlattenStr(), Unwords() and Unlines().
+"
+" Two optional arguments:
+"   func! OptSnippetIterate(name, default, format, prompts, metaTransformer, n, overrideReturn)
+"
+" n	how many times to call Snippen non-optionally.
+" 	OptSnippetIterate() is used to get input lists of variable length.
+" 	If n is bigger than 0, the first n Snippets won't be OptSnippets, so
+" 	you can insure that at least n Snippets are provided, and then
+" 	optionally any amount more.
+"
+" overrideReturn	See OptSnippet
+func! OptSnippetIterate(name, default, format, prompts, metaTransformer, ...)
+
+	" Figure out the defaults of the optional arguments
+	let n        = a:0 > 0 ? a:1+1 : 0
+	echo n
+	" let override = a:0 > 1 ? a:2   : ''
+	let override = ''
+
+	" The lambdas for the Iterate()s
+	let S = {->    Snippet(    '',            a:format, a:prompts) }
+	let O = {-> OptSnippet(a:name, a:default, a:format, a:prompts) }
+
+	let head = Iterate(n, S, '')
+	let tail = IterateWhile({ s -> s != override }, O, O())
+
+	" Do all the magic
+	" Tail() because the first element of head will invariably be ''
+	return a:metaTransformer(Tail(head + tail))
+
 endfunc
 
 " Takes input format: [ string, moves, [12] ]

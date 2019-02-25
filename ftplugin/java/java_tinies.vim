@@ -46,43 +46,34 @@ let s:TypeDict    = { 'i':'int',     'S':'short', 'c':'char', 'd':'double', 'f':
 let s:GenericDict = { 'i':'Integer', 'S':'Short', 'c':'Char', 'd':'Double', 'f':'Float', 'b':'Boolean', 's':'String', 'al':'ArrayList<', 'v':'Vector<' }
 
 func! TypeTransformer(string)
-	return TTransformer(a:string, s:TypeDict)
+	return TTransformer(a:string, s:TypeDict, '')
 endfunc
 
-func! GenericsTransformer(string)
-	return TTransformer(a:string, s:GenericDict)
+func! GenericsTransformer(string, previousString)
+	" if we pass always the previously parsed token to this function as
+	" well, we an call AddIfNotThere() from here, to get that neat
+	" behaviour as well!
+	return TTransformer(a:string, s:GenericDict, a:previousString)
 endfunc
 
 " Prompts recursively with GenericsTransformer() if the input ends in ',' or
 " in '<' or, if the input is an abbreviation, the substitution of the
 " abbreviation does.
-func! TTransformer(string, dict)
-	let string = trim(a:string)
+func! TTransformer(string, dict, previousString)
 
-	" If the last char of the input is a comma, then it's a part of
-	" syntax. That has to be removed or it'll confuse the lookup function.
-	" Note, that the '<' don't have to be removed, cause the point of the
-	" abbreviation tokens is, that the abbrevs don't have the '<' and non
-	" of the primitives require them.
-	let s = Last(Chars(string)) == ',' ?
-		\ TypeFormat(string[0:len(string)-2], a:dict).',' :
-		\ TypeFormat(string, a:dict)
+	let string = trim(a:string)
+	let s = TypeFormat(string, a:dict)
 
 	let lastChar = Last(Chars(s))
 
-	" If the end of s isn't one of the syntactical elements, there's
-	" nothing to do.
-	if lastChar != '<' && lastChar != ','
-		return s
-
-	" If it is, however...
+	if lastChar == '<'
+		let genericParams = OptSnippetIterate('Type Argument', 'N', '{}', [{-> Prompt('type (generic) - '.a:previousString.s.' : ', { m -> GenericsTransformer(m, a:previousString.s) }, 'Integer') }], { s -> FlattenStr(Map({ s -> s.',' }, Init(s)) + [Last(s)]) }, 1)
+		echo s.genericParams.'>'
+		return s . genericParams . '>'
 	else
-		" Re-prompt, but if the previously entered type ends in '<'
-		" you need to add '>' after the result of prompting this time.
-		let gt = lastChar == '<' ? '>' : ''
-
-		return Snippet('', s.'{}'.gt, [{-> Prompt('type (generic): ', { s -> GenericsTransformer(s) }, 'Integer') }])
+		return s
 	endif
+
 endfunc
 
 func! TypeFormat(token, dict)
