@@ -60,20 +60,19 @@ endfunc
 " in '<' or, if the input is an abbreviation, the substitution of the
 " abbreviation does.
 func! TTransformer(string, dict, previousString)
-
 	let string = trim(a:string)
 	let s = TypeFormat(string, a:dict)
 
 	let lastChar = Last(Chars(s))
 
 	if lastChar == '<'
+		" TODO split this into a neat multi-line thing so one can read it....
 		let genericParams = SnippetExtendedIterate('Type Argument', 'N', '{}', [{-> Prompt('type (generic) - '.a:previousString.s.' : ', { m -> GenericsTransformer(m, a:previousString.s) }, 'Integer') }], { s -> FlattenStr(Map({ s -> s.',' }, Init(s)) + [Last(s)]) }, 1)
 		echo s.genericParams.'>'
 		return s . genericParams . '>'
 	else
 		return s
 	endif
-
 endfunc
 
 func! TypeFormat(token, dict)
