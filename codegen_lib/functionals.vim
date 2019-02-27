@@ -402,3 +402,11 @@ func! Groups(lambda, list)
 
 	return l
 endfunc
+
+func! Max(list)
+	return max(a:list)
+endfunc
+
+func! Min(list)
+	return min(a:list)
+endfunc
