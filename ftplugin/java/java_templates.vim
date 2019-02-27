@@ -35,7 +35,7 @@ func! JavaClassDefault()
 	" reset output height
 	let &cmdheight = old_cmdheight
 
-	return [ l, Motion(l, 'main(String[] args)', '5j$x', '3j$x'), 2 ]
+	return [ l, Motion(l, 'main(String[] args)', 'gg6j$x', 'gg4j$x'), 2 ]
 
 endfunc
 
