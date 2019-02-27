@@ -10,7 +10,7 @@ func Run()
    " let input = "  public   static  ArrayList  < HashMap< Integer, Double> >  [  ]  complicatedThing (int honk, double stonkr , MetaBall clonkers)   throws TamperTantrum, {"
    " let input = "  public   ArrayList  < HashMap< Integer, Double> >   complicatedThing (, double stonkr , MetaBall clonkers)   {"
    " let input = "  void   complicatedThing (, double stonkr , MetaBall clonkers)   {"
-   " let input = "  void   complicatedThing ()   {"
+   let input = "  void   complicatedThing ()   {"
 
 
    " INPUT SANITIZER PART
@@ -91,11 +91,28 @@ func Run()
    let dictStr = ''
 
    for t in keys(tokenDict)
-      let dictStr = dictStr . t . ': ' . tokenDict[t] . '  '
+      let dictStr = dictStr . t . ': ' . tokenDict[t] . ' | '
    endfor
 
 
-   " compose tags snippets
+   " Output the help string
+   echo dictStr
+
+
+   " Description
+
+   let PromptTrans = { s -> TagsTransformer(s, 0, tokenDict) }
+   let desc = Snippet('', '{}', [ {-> Prompt('desc: ', PromptTrans, 'This is %n.') } ])
+
+   " add period after first line of description
+   let desc = Unlines( [ Head(Lines(desc)).'.' ] + Tail(Lines(desc)) )
+
+   " uppercase first character
+   let desc = toupper(desc[0]).desc[1:]
+
+
+
+   " Compose tags snippets
 
    " add the actual tags to the varying bits
    let paramTags  = Map({ s -> '@param '.s }, args)
@@ -105,12 +122,13 @@ func Run()
    " find the longest @param tag, that's used for indentation
    let descIndent = Max( Map( { s -> len(s) }, paramTags ) )
 
+   " create tags transformer for the tags' prompts
+   let TagsTrans = { s -> TagsTransformer(s, descIndent, tokenDict) }
+
    " compose format strings for the tag snippets, complete with indentation and appended '{}'
    let paramsFormatStrs = Map({ s -> AppendDescIndent(s, descIndent).'{}' }, paramTags)
    let exceptFormatStrs = Map({ s -> AppendDescIndent(s, descIndent).'{}' }, exceptTags)
    let returnFormatStrs = Map({ s -> AppendDescIndent(s, descIndent).'{}' }, returnTags)
-
-   let TagsTrans = { s -> TagsTransformer(s, descIndent, tokenDict) }
 
    " create the Prompt() calls for the tags
    let paramsPrompts = map(paramTags,  { i, tag -> {-> Prompt(tag.': ', TagsTrans, 'A value for %p'.i) } })
@@ -121,8 +139,8 @@ func Run()
    " create the Snippet() calls for the tags
 
    " parameters and return type
-   let paramsSnippets  = Zip(paramsFormatStrs, paramTags)
-   let paramsSnippets  = Map({ p -> {-> Snippet('', p[0], [ p[1] ]) } }, paramsSnippets)
+   let paramsSnippets = Zip(paramsFormatStrs, paramTags)
+   let paramsSnippets = Map({ p -> {-> Snippet('', p[0], [ p[1] ]) } }, paramsSnippets)
 
    " exceptions
    let exceptSnippets = Zip(exceptFormatStrs, exceptTags)
@@ -136,10 +154,18 @@ func Run()
    " actually compose the tags-list
    let tags = paramsSnippets + returnSnippets + exceptSnippets
 
-   echo dictStr
-   let t = Map({S->S()}, tags)
-   echo Unlines(t)
 
+   " Run tags
+   let tags = Unlines( Map({ S -> S() }, tags) )
+
+
+   " Compose full comment
+   let desc = Map({ l -> ' * '.l }, Lines(desc))
+   let tags = Map({ l -> ' * '.l }, Lines(tags))
+
+   let comment = [ '/**' ] + desc + [' *'] + tags + [' */']
+
+   return Unlines(comment)
 
 endfunc
 
@@ -150,19 +176,22 @@ func! TagsTransformer(line, indent, tokenDict)
    " If the last thing the user entered, was \n, we want to reprompt
    if match(Last(lines), '\\n') != -1
       " prompt for more lines
-      let lines2 = SnippetIterateWhile('', '{}', [ {-> Prompt('multiline mode: ', g:Id, '') } ], { s -> s }, { s -> s != '' })
+      " Meta transformer in the above adds the literal '\n' after each line, so the SplitStr below works properly
+      let lines2 = SnippetIterateWhile('', '{}', [ {-> Prompt('multiline mode: ', g:Id, '') } ], { s -> Map({a->a.'\n'},s) }, { s -> s != '' })
 
-      " also separate out the newline tokens in here
-      let lines2 = Flatten( Map( { s -> SplitStr(s, '\\n') }, lines2 ) )
+      " also separate out the newline tokens in here, and remove the last
+      " element, which is the newline added by the meta transformer to the
+      " last prompted line (it's not needed)
+      let lines2 = Init( Flatten( Map( { s -> SplitStr(s, '\\n') }, lines2 ) ) )
 
       let lines = lines + lines2
    endif
 
    " Append spaces and tabs for indentation in multiline descriptions
-   let indentChars = Unchars(Repeat(a:indent, ' ')).'	'
+   let indentChars = a:indent > 0 ? Unchars(Repeat(a:indent, ' ')).'	' : ''
    let lines = [ Head(lines) ] + Map( { l -> l == '\n' ? l : indentChars.l }, Tail(lines) )
 
-   " Substitute dict-tokens and turn newline tokens into actual newlines 
+   " Substitute dict-tokens and turn newline tokens into actual newlines
    let output = FlattenStr(lines)
    let output = SubstTokens(output, a:tokenDict)
    let output = substitute(output, '\\n', "\n", 'g')
@@ -179,7 +208,6 @@ func! SubstTokens(string, dict)
 endfunc
 
 func! AppendDescIndent(string, indent)
-
    let string = a:string
 
    " if string is already longer than indent, just append a space
@@ -189,6 +217,5 @@ func! AppendDescIndent(string, indent)
 
    " Append indent - len(string) spaces and a tab
    let n = a:indent - len(string)
-   return Unchars( Chars(string) + Repeat(n, ' ') + [ '	 ' ] )
-
-   endfunc
+   return Unchars( Chars(string) + Repeat(n, ' ') + [ '	' ] )
+endfunc
