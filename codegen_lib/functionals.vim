@@ -63,7 +63,7 @@ func! Head(list)
 	if len(a:list) > 0
 		return a:list[0]
 	else
-		return []
+		return ''
 	endif
 endfunc
 
@@ -135,7 +135,7 @@ endfunc
 
 func! Last(list)
 	if len(a:list) <= 0
-		return []
+		return ''
 	else
 		return a:list[len(a:list)-1]
 	endif
