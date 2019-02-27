@@ -118,7 +118,7 @@ func! SnippetExtendedIterate(name, default, format, prompts, metaTransformer, n,
 	" Figure out the defaults of the optional arguments
 	let override = a:0 > 1 ? a:1 : ''
 
-	let head = a:n <= 0 ? [] : SnippetIterate(a:name, a:format, a:prompts, g:Id, a:n, override)
+	let head = a:n <= 0 ? [] : SnippetIterate(a:name, a:format, a:prompts, g:Id, a:n)
 	let tail = OptSnippetIterate(a:name, a:default, a:format, a:prompts, g:Id, override)
 
 	" Do all the magic
@@ -126,23 +126,30 @@ func! SnippetExtendedIterate(name, default, format, prompts, metaTransformer, n,
 
 endfunc
 
+" optional arg is the override for the optSnippet function
 func! OptSnippetIterate(name, default, format, prompts, metaTransformer, ...)
 
 	" Handle optional argument
 	let override = a:0 > 1 ? a:1 : ''
 
-	let S = {-> OptSnippet(a:name, a:default, a:format, a:prompts) }
+	let S = {-> OptSnippet(a:name, a:default, a:format, a:prompts, override) }
 	return a:metaTransformer( IterateWhile({ s -> s != override }, S, S()) )
 
 endfunc
 
-func! SnippetIterate(name, format, prompts, metaTransformer, n, ...)
-
-	" Handle optional argument
-	let override = a:0 > 1 ? a:1 : ''
+func! SnippetIterate(name, format, prompts, metaTransformer, n)
 
 	let S = {-> Snippet('', a:format, a:prompts) }
 	return a:metaTransformer( Iterate(a:n, S, S()) )
+
+endfunc
+
+" Mostly useful for Sentinel based re-prompting, when you don't want to keep
+" re-asking to add another one, and another one, and another one....
+func! SnippetIterateWhile(name, format, prompts, metaTransformer, whileCondition)
+
+	let S = {-> Snippet('', a:format, a:prompts) }
+	return a:metaTransformer( IterateWhile(a:whileCondition, S, S()) )
 
 endfunc
 
