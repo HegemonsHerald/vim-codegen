@@ -176,13 +176,13 @@ func! TagsTransformer(line, indent, tokenDict)
    " If the last thing the user entered, was \n, we want to reprompt
    if match(Last(lines), '\\n') != -1
       " prompt for more lines
-      " Meta transformer in the above adds the literal '\n' after each line, so the SplitStr below works properly
-      let lines2 = SnippetIterateWhile('', '{}', [ {-> Prompt('multiline mode: ', g:Id, '') } ], { s -> Map({a->a.'\n'},s) }, { s -> s != '' })
+      let lines2 = SnippetIterateWhile('', '{}', [ {-> Prompt('multiline mode: ', g:Id, '') } ], { s -> s }, { s -> s != '' })
 
-      " also separate out the newline tokens in here, and remove the last
-      " element, which is the newline added by the meta transformer to the
-      " last prompted line (it's not needed)
-      let lines2 = Init( Flatten( Map( { s -> SplitStr(s, '\\n') }, lines2 ) ) )
+      " add newlines after each of the entered lines, so the user doesn't have to
+      let lines2 = Intersperse(lines2, '\n')
+
+      " separate out the newline tokens from inside the entered lines
+      let lines2 = Flatten( Map( { s -> SplitStr(s, '\\n') }, lines2 ) )
 
       let lines = lines + lines2
    endif
