@@ -19,41 +19,37 @@ func Run()
    let input = trim(input)
 
    " fix multi-whitespace
-   let input = substitute(input, '\s\+', ' ', 'g')
+   let line = substitute(input, '\s\+', ' ', 'g')
 
    " remove spaces AROUND any of these: , [ < ( )
-   let input = substitute(input, '\v\s*([,[<()])\s*', '\1', 'g')
+   let line = substitute(line, '\v\s*([,[<()])\s*', '\1', 'g')
 
    " remove spaces BEFORE any of these: ] >
-   let input = substitute(input, '\s*\([>\]]\)', '\1', 'g')
+   let line = substitute(line, '\s*\([>\]]\)', '\1', 'g')
 
    " remove trailing {
-   let input = substitute(input, '\s*{$', '', '')
+   let line = substitute(line, '\s*{$', '', '')
 
    " INSERT spaces around these: ( )
-   let input = substitute(input, '\v([()])', ' \1 ', 'g')
+   let line = substitute(line, '\v([()])', ' \1 ', 'g')
 
 
 
 
    " METHOD DESTRUCTURING PART
 
-   let words = Words(input)
-
+   let words = Words(line)
 
    " remove keywords from beginning
    let words = Filter( { s -> match(s, '\v(public|private|protected|static)') == -1 }, words )
-
 
    " get type
    let type = Head(words)
    let words = Tail(words)
 
-
    " get name
    let name = Head(words)
    let words = Tail(words)
-
 
    " get parameters
 
@@ -81,7 +77,7 @@ func Run()
 
    " create token dictionairy
 
-   let tokenDict = { '%n':name, '%t':type, '%{':'{@code' }
+   let tokenDict = { '%n': '{@code '.name.'}', '%t': '{@code '.type.'}', '%{':'{@code' }
 
    " can't do these for-loops as Map()s cause I need to run let-statements...
    for p in Zip(range(len(args)), args)
@@ -92,7 +88,7 @@ func Run()
       let tokenDict['%e'.e[0]] = '{@code '.e[1].'}'
    endfor
 
-   let dictStr = FlattenStr( Init( Intersperse( Map( { key -> key.': '.tokenDict[key] }, keys(tokenDict) ), ' | ' ) ) )
+   let dictStr = FlattenStr( Intersperse( Map( { key -> key.': '.tokenDict[key] }, keys(tokenDict) ), ' | ' ) )
 
 
    " Output the help string
@@ -102,8 +98,8 @@ func Run()
 
    " Description
 
-   let PromptTrans = { s -> TagsTransformer(s, 0, tokenDict) }
-   let desc = Snippet('', '{}', [ {-> Prompt('desc: ', PromptTrans, 'This is %n.') } ])
+   let DescTrans = { s -> TagsTransformer(s, 0, tokenDict) }
+   let desc = Snippet('', '{}', [ {-> Prompt('desc: ', DescTrans, 'This is %n.') } ])
 
    " add period after first line of description
    let period = Last(Chars(Head(Lines(desc)))) == '.' ? '' : '.'
@@ -128,14 +124,14 @@ func Run()
    let TagsTrans = { s -> TagsTransformer(s, descIndent, tokenDict) }
 
    " compose format strings for the tag snippets, complete with indentation and appended '{}'
-   let paramsFormatStrs = Map({ s -> AppendDescIndent(s, descIndent).'{}' }, paramTags)
+   let paramsFormatStrs = Map({ s -> AppendDescIndent(s, descIndent).'{}' }, paramTags )
    let exceptFormatStrs = Map({ s -> AppendDescIndent(s, descIndent).'{}' }, exceptTags)
    let returnFormatStrs = Map({ s -> AppendDescIndent(s, descIndent).'{}' }, returnTags)
 
    " create the Prompt() calls for the tags
-   let paramsPrompts = map(paramTags,  { i, tag -> {-> Prompt(tag.': ', TagsTrans, 'A value for %p'.i) } })
-   let exceptPrompts = map(exceptTags, { i, tag -> {-> Prompt(tag.': ', TagsTrans, '%n throws %e'.i) } })
-   let returnPrompts = map(returnTags, { i, tag -> {-> Prompt(tag.': ', TagsTrans, '%n returns sth of type %t'  ) } })
+   let paramsPrompts = map(paramTags,  { i, tag -> {-> Prompt(tag.': ', TagsTrans, 'A value for %p'.i          ) } })
+   let exceptPrompts = map(exceptTags, { i, tag -> {-> Prompt(tag.': ', TagsTrans, '%n throws %e'.i            ) } })
+   let returnPrompts = map(returnTags, { i, tag -> {-> Prompt(tag.': ', TagsTrans, '%n returns sth of type %t' ) } })
 
 
    " create the Snippet() calls for the tags
@@ -184,7 +180,7 @@ func! TagsTransformer(line, indent, tokenDict)
       let lines2 = SnippetIterateWhile('', '{}', [ {-> Prompt('multiline mode: ', g:Id, '') } ], { s -> s }, { s -> s != '' })
 
       " add newlines after each of the entered lines, so the user doesn't have to
-      let lines2 = Init(Intersperse(lines2, '\n'))
+      let lines2 = Intersperse(lines2, '\n')
 
       " separate out the newline tokens from inside the entered lines
       let lines2 = Flatten( Map( { s -> SplitStr(s, '\\n') }, lines2 ) )
@@ -195,6 +191,7 @@ func! TagsTransformer(line, indent, tokenDict)
    " Append spaces and tabs for indentation in multiline descriptions
    let indentChars = a:indent > 0 ? Unchars(Repeat(a:indent, ' ')).'	' : ''
    let lines = [ Head(lines) ] + Map( { l -> l == '\n' ? l : indentChars.l }, Tail(lines) )
+   " Note: I don't prepend the '\n's with indentChars, cause trailing whitespace makes me mad
 
    " Substitute dict-tokens and turn newline tokens into actual newlines
    let output = FlattenStr(lines)
