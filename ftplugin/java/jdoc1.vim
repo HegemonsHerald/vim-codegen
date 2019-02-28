@@ -10,10 +10,13 @@ func Run()
    " let input = "  public   static  ArrayList  < HashMap< Integer, Double> >  [  ]  complicatedThing (int honk, double stonkr , MetaBall clonkers)   throws TamperTantrum, {"
    " let input = "  public   ArrayList  < HashMap< Integer, Double> >   complicatedThing (, double stonkr , MetaBall clonkers)   {"
    " let input = "  void   complicatedThing (, double stonkr , MetaBall clonkers)   {"
-   let input = "  void   complicatedThing ()   {"
+   " let input = "  void   complicatedThing ()   {"
 
 
    " INPUT SANITIZER PART
+
+   " hmmmmmm
+   let input = trim(input)
 
    " fix multi-whitespace
    let input = substitute(input, '\s\+', ' ', 'g')
@@ -80,6 +83,7 @@ func Run()
 
    let tokenDict = { '%n':name, '%t':type, '%{':'{@code' }
 
+   " can't do these for-loops as Map()s cause I need to run let-statements...
    for p in Zip(range(len(args)), args)
       let tokenDict['%p'.p[0]] = '{@code '.p[1].'}'
    endfor
@@ -88,14 +92,11 @@ func Run()
       let tokenDict['%e'.e[0]] = '{@code '.e[1].'}'
    endfor
 
-   let dictStr = ''
-
-   for t in keys(tokenDict)
-      let dictStr = dictStr . t . ': ' . tokenDict[t] . ' | '
-   endfor
+   let dictStr = FlattenStr( Init( Intersperse( Map( { key -> key.': '.tokenDict[key] }, keys(tokenDict) ), ' | ' ) ) )
 
 
    " Output the help string
+   echo input
    echo dictStr
 
 
@@ -105,7 +106,8 @@ func Run()
    let desc = Snippet('', '{}', [ {-> Prompt('desc: ', PromptTrans, 'This is %n.') } ])
 
    " add period after first line of description
-   let desc = Unlines( [ Head(Lines(desc)).'.' ] + Tail(Lines(desc)) )
+   let period = Last(Chars(Head(Lines(desc)))) == '.' ? '' : '.'
+   let desc = Unlines( [ Head(Lines(desc)).period ] + Tail(Lines(desc)) )
 
    " uppercase first character
    let desc = toupper(desc[0]).desc[1:]
@@ -163,7 +165,10 @@ func Run()
    let desc = Map({ l -> ' * '.l }, Lines(desc))
    let tags = Map({ l -> ' * '.l }, Lines(tags))
 
-   let comment = [ '/**' ] + desc + [' *'] + tags + [' */']
+   " Add an empty line separating tags from description, if there are any tags
+   let desc = len(tags) != 0 ? desc + [' *'] : desc
+
+   let comment = [ '/**' ] + desc + tags + [' */']
 
    return Unlines(comment)
 
@@ -179,7 +184,7 @@ func! TagsTransformer(line, indent, tokenDict)
       let lines2 = SnippetIterateWhile('', '{}', [ {-> Prompt('multiline mode: ', g:Id, '') } ], { s -> s }, { s -> s != '' })
 
       " add newlines after each of the entered lines, so the user doesn't have to
-      let lines2 = Intersperse(lines2, '\n')
+      let lines2 = Init(Intersperse(lines2, '\n'))
 
       " separate out the newline tokens from inside the entered lines
       let lines2 = Flatten( Map( { s -> SplitStr(s, '\\n') }, lines2 ) )
