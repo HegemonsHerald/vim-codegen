@@ -313,8 +313,11 @@ func! FlattenStr(list)
 	return Foldl({v,acc->v.acc}, "", a:list)
 endfunc
 
+" puts element in between every element of list (but not before the first or
+" after the last)
+" note, that haskell's intersperse has flipped argument order
 func! Intersperse(list, element)
-	return Flatten(Zip(a:list, Repeat(len(a:list), a:element)))
+	return Init(Flatten(Zip(a:list, Repeat(len(a:list), a:element))))
 endfunc
 
 func! Alternate(list1, list2)
