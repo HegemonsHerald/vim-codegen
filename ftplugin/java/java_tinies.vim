@@ -224,7 +224,7 @@ func! SwitchPrint(string)
 endfunc
 
 
-" TODO loops and their transformers => grammar definition
+" TODO loops and their transformers
 
 
 

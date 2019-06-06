@@ -111,7 +111,8 @@ func! Map(lambda, list)
 	" the lambda takes only the value as argument
 
 	" create a copy of list, so there's no hidden mutabiliy from the use of map()
-	let list = a:list[:]
+	" let list = a:list[:]
+	let list = copy(a:list[:])
 
 	return map(list, { i,v -> a:lambda(v) })
 endfunc

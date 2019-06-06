@@ -1,0 +1,52 @@
+public static HashMap < String, Integer> main ( String[] args, int a ) throws Exception {
+
+  - trim
+  - multi space down to single space
+  - no space around '<' or '[' or ',' or '(' or ')'
+  - no space before '>' or ']'
+
+public static HashMap<String,Integer> main(String[] args,int a)throws Exception {
+
+  - insert space around '(' and ')'
+  - replace ',' with ' ' inside '()'
+
+public static HashMap<String,Integer> main ( String[] args int a ) throws Exception
+
+  - unwords
+
+[ public, static, HashMap<String,Integer>, main, (, String[], args, int, a, ), throws, Exception ]
+
+  - filter against keywords in beginning
+
+[ HashMap<String,Integer>, main, (, String[], args, int, a, ), throws, Exception ]
+
+  - take 2: type, take name
+
+type = HashMap<String,Integer>
+name = main
+[ (, String[], args, int, a, ), throws, Exception ]
+
+  - init $ tail $ takeWhile (/= ')')
+  - drop len(previous + 2)
+
+args = [ String[], args, int, a ]
+[ throws, Exception ]
+
+  - args: map last $ groupN 2
+  - exceptions:
+      if len(what's left) > 1 && head(what's left) == 'throws'
+        then tail(what's left)
+	else []
+
+
+args = [ args, a ]
+exceptions = [ Exception ]
+
+
+
+For the rest, use the exact same approach. You can even reuse the regex-sanitizer, if you
+move the part for spacing out the '()' and removing the '{' into the parseMethod() function.
+
+public static final TYPE NAME = VALUE;
+public class name<generics> extends ... implements ... {
+public interface name<generics> extends ... implements ... {

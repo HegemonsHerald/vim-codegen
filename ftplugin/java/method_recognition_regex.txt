@@ -1,0 +1,21 @@
+Can you use echon with inspect to make the output of the typeprompt more useful?
+
+search() with
+
+  - b
+  - n
+
+to search for imports above the current line!
+
+Regex that matches Java method declarations
+-------------------------------------------
+
+TYPE = '(int|double|float|char|short|boolean|void|\u\w*(\s*\<[^\>]+\>)?(\s*\[\])?)'
+MAIN = '(public|protected|private|static|\s)+\s+' . TYPE . '\s+(\w+)\s*\([^\)]*\)\s*(\{?|[^;])'
+
+public static Honk<Integer <HONK>> [] main (String[] args) throws Exception {
+Honk<Integer <HONK>> [] main (String[] args) throws Exception {
+private static Honk<Integer <HONK>> [] main () throws Exception, sldkfjldskjf {
+static Honk<Integer <HONK>> [] main (hoskdlf;jd;lj,f s;flkdsjf a;) {
+Honk main () {
+public Honk () {»·······THIS DOES NOT MATCH AGAINST CONSTRUCTORS!

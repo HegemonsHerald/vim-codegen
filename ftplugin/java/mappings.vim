@@ -7,6 +7,9 @@ runtime codegen_lib/core.vim
 " All of these are leader commands now, cause otherwise stuff
 " like jo interferes with words like join, and that we can't have!
 
+" java section header comments
+autocmd FileType java inoremap <buffer> /* /*  */<Left><Left><Left>
+
 " java println
 " Note: this also is the implementation of this tool
 autocmd FileType java inoremap <buffer> <leader>js <Esc>ISystem.out.println(<Esc>A);<Esc>V=$F)i

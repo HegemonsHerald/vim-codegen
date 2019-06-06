@@ -1,0 +1,15 @@
+
+- make the switch use SnippetIterateWhile, the quit-on-empty-enter is just sooo much neater, than the endless re-asking 'do you want to continue?'
+
+- primitive codegens: constants, the prompt-visibility variants, methods, constructors, for loops, while loops
+
+- jdoc codegens
+   - move method jdoc into functions
+   - make method jdoc take it's input as an argument
+       --> then you can just pass a constructor off as a method by removing public and adding 'void'!
+           (if you really want a special type, have it be name instead of 'void' and add checking functionality for this case...)
+   - constants (<-- oneliners), classes and interfaces, constructors
+   - identifier function
+   - proper config for Inserter...
+
+- addIfNotThere functionality and globalized dictionairies for the type prompt
